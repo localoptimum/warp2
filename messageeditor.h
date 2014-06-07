@@ -18,11 +18,13 @@ public:
 private slots:
     void on_messageWindowCancelButton_clicked();
     void on_attachmentFileBrowseButton_clicked();
+    void on_messageWindowSendButton_clicked();
 
 
 private:
     Ui::MessageEditor *ui;
     QString attachmentFileName;
+    QString myEmailAddress;
 };
 
 #endif // MESSAGEEDITOR_H
