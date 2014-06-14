@@ -18,10 +18,14 @@ signals:
 
 public slots:
     void setUploadHeaderProgress(qint64 prog, qint64 progmax);
+    void requestFinished(QNetworkReply *data);
+
 
 private:
     QNetworkAccessManager *netManager;
     QNetworkReply *netReply;
+
+    bool headerSendComplete;
 
 };
 

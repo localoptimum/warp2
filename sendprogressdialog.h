@@ -17,6 +17,7 @@ public:
     void setTotalProgress(int prog);
     void setAssembleFilesProgress(int prog);
     void setUploadMessageProgress(int prog);
+    void setUploadHeaderProgress(int prog);
     void setUploadAttachmentProgress(int prog);
 
     ~SendProgressDialog();

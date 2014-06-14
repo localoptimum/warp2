@@ -17,6 +17,8 @@ public:
     explicit MessageEditor(QWidget *parent = 0);
     ~MessageEditor();
 
+    void updateHeaderProgress(int value);
+
 private slots:
     void on_messageWindowCancelButton_clicked();
     void on_attachmentFileBrowseButton_clicked();

@@ -459,3 +459,7 @@ void MessageEditor::assembleMessage(void)
 }
 
 
+void MessageEditor::updateHeaderProgress(int value)
+{
+    sendProgress->setUploadHeaderProgress(value);
+}

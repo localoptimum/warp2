@@ -29,6 +29,12 @@ void SendProgressDialog::setUploadMessageProgress(int prog)
     tactilepause();
 }
 
+void SendProgressDialog::setUploadHeaderProgress(int prog)
+{
+    ui->sendUploadHeaderProgressBar->setValue(prog);
+    tactilepause();
+}
+
 void SendProgressDialog::setUploadAttachmentProgress(int prog)
 {
     ui->sendUploadAttachmentsProgressBar->setValue(prog);
