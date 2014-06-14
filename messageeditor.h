@@ -2,6 +2,8 @@
 #define MESSAGEEDITOR_H
 
 #include <QDialog>
+#include "sendprogressdialog.h"
+#include "messagesender.h"
 
 namespace Ui {
 class MessageEditor;
@@ -23,8 +25,21 @@ private slots:
 
 private:
     Ui::MessageEditor *ui;
+
+    SendProgressDialog* sendProgress;
+    messageSender* myMessageSender;
+
     QString attachmentFileName;
+    QString headerFileName;
+    QString messageFileName;
+
     QString myEmailAddress;
+
+    void assembleHeader();
+    void assembleMessage();
+    void assembleAttachment();
+
+    void uploadMessage();
 };
 
 #endif // MESSAGEEDITOR_H

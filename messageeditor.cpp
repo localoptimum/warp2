@@ -1,10 +1,16 @@
 #include "messageeditor.h"
 #include "ui_messageeditor.h"
+#include "messagesender.h"
+
+#include "sendprogressdialog.h"
 
 #include <QFileDialog>
 #include <QProcess>
 #include <QDateTime>
+#include <QMessageBox>
 #include <QCryptographicHash>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
 #include <QTemporaryFile>
 #include <iostream>
 
@@ -98,7 +104,89 @@ void MessageEditor::on_attachmentFileBrowseButton_clicked()
 
 void MessageEditor::on_messageWindowSendButton_clicked()
 {
+
+
+    // Reset file paths so errors can be tracked
+    attachmentFileName = "";
+    headerFileName = "";
+    messageFileName = "";
+
+
+    //Present send progress
+
+    sendProgress = new SendProgressDialog(this);
+    myMessageSender = new messageSender(this);
+
+    sendProgress -> show();
+
+    sendProgress->setTotalProgress(0);
+    sendProgress->setAssembleFilesProgress(5);
+    //sendProgress->setUploadHeaderProgress(0);
+    sendProgress->setUploadMessageProgress(0);
+    sendProgress->setUploadAttachmentProgress(0);
+
+
+
+    this->assembleHeader();
+    this->assembleMessage();
+
+    sendProgress->setTotalProgress(30);
+
+
+    myMessageSender->uploadMessage(headerFileName,messageFileName,attachmentFileName);
+
+
+
+//    QTemporaryFile messageTemp;
+
+//    messageTemp.open();
+
+//    QString messageTempFileName = messageTemp.fileName();
+
+//    messageTemp.write(messageBodyText.toLocal8Bit());
+//    messageTemp.setAutoRemove(false);  // we will manually remove the temp files
+
+//    messageTemp.close();
+
+
+
+    //Encrypt message body
+    //Make tempfile of body
+    //Sha1 body
+
+
+    //Even if attachment is not empty, then still:
+    //Encrypt attachment
+    //Make tempfile of attachment
+    //Sha1 attachment
+
+
+    //Compute timestamp token
+    //Upload header to server
+
+    //Compute timestamp token
+    //Upload message to server
+
+    //Compute timestamp token
+    //Upload attachment to server
+
+    //Clean up - remove temporary files etc
+
+    std::cout << "Message sent" << std::endl;
+
+    sendProgress->setTotalProgress(100);
+    sendProgress->close();
+
+    delete myMessageSender;
+
+    QWidget::close();
+}
+
+
+void MessageEditor::assembleHeader(void)
+{
     //Assemble header material into header string
+
 
     QString msgHeader;
 
@@ -119,7 +207,7 @@ void MessageEditor::on_messageWindowSendButton_clicked()
     msgHeader.append(ui->subjectTextBox->text());
     msgHeader.append(";");
 
-    std::cout << msgHeader.toStdString() << std::endl;
+//    std::cout << msgHeader.toStdString() << std::endl;
 
 
 
@@ -149,101 +237,225 @@ void MessageEditor::on_messageWindowSendButton_clicked()
     encryptPipe.append(" >> ");
     encryptPipe.append(headerTempName);
 
-    std::cout << encryptPipe.toStdString() << std::endl;
+//    std::cout << encryptPipe.toStdString() << std::endl;
 
     encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
 
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
-    encryptProcess.write(msgHeader.toAscii()); // then wait for bytes written before reading
+    encryptProcess.write(msgHeader.toLocal8Bit()); // then wait for bytes written before reading
 
     encryptProcess.waitForBytesWritten();
     encryptProcess.closeWriteChannel();
     encryptProcess.waitForFinished();
 
-    encryptOutput = encryptProcess.readAllStandardOutput();
+//    encryptOutput = encryptProcess.readAllStandardOutput();
     encryptError = encryptProcess.readAllStandardError();
 
-    std::cout << "Output:" << std::endl << encryptOutput.toStdString() << std::endl;
-    std::cout << "Error:" << std::endl << encryptError.toStdString() << std::endl;
+
+    if(encryptError.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              encryptError);
+    }
+
+//    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
+//    std::cout << "Encrypt Error:" << std::endl << encryptError.toStdString() << std::endl;
 
     encryptProcess.close();
 
-//    //Make tempfile of header
+    //Sha1 header
 
-//    QTemporaryFile headerTemp;
+    QProcess sha1process;
 
-//    headerTemp.open();
-//    headerTemp.setAutoRemove(false);  // we will manually remove the temp files after send process is finished
+    sha1process.start("sha1sum", QStringList() << headerTempName);
 
+    sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
-//    headerTemp.write(msgHeader.toLocal8Bit());
+    sha1process.waitForFinished();
 
+    QString headerSha1(sha1process.readAllStandardOutput());
+    QString sha1err(sha1process.readAllStandardError());
 
+    if(sha1err.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              sha1err);
+    }
 
-//    QProcess encryptProcess;
+    headerSha1 = headerSha1.left(40);
 
+//    std::cout << "sha1 Output:" << std::endl << headerSha1.toStdString() << std::endl;
+//    std::cout << "sha1 Error:" << std::endl << sha1err.toStdString() << std::endl;
 
-//    //Sha1 header
+    sha1process.close();
 
-//    QProcess sha1process;
-
-//    sha1process.start("sha1sum", QStringList() << headerTempName);
-
-//    sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
-
-//    sha1process.waitForFinished();
-
-//    QString headerSha1(sha1process.readAllStandardOutput());
-//    QString sha1err(sha1process.readAllStandardError());
-
-//    sha1process.close();
-
-//    std::cout << headerTempName.toStdString() << std::endl;
-
-//    std::cout << headerSha1.toStdString() << std::endl;
-//    //std::cout << sha1err.toStdString() << std::endl;
-
-
-
-//    //Sha1 body
-
-//    QString messageBodyText = ui->messageTextBox->toPlainText();
-//    QTemporaryFile messageTemp;
-
-//    messageTemp.open();
-
-//    QString messageTempFileName = messageTemp.fileName();
-
-//    messageTemp.write(messageBodyText.toLocal8Bit());
-//    messageTemp.setAutoRemove(false);  // we will manually remove the temp files
-
-//    messageTemp.close();
+    QProcess fileRenameProcess;
+    QString headerSha1Filename = QString("/tmp/").append(headerSha1).append(".warp2.header");  //this is sloppy, need to find directory of original file dynamically
+    QString renamePipe = "mv ";
+    renamePipe.append(headerTempName);
+    renamePipe.append(" ");
+    renamePipe.append(headerSha1Filename);
 
 
-//    encryptProcess.start("gpg --")
+//    std::cout << headerTempName.toStdString() << " " << headerSha1Filename.toStdString() << std::endl;
+
+    fileRenameProcess.start("/bin/bash", QStringList() << "-c" << renamePipe);
+
+    fileRenameProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+    fileRenameProcess.waitForFinished();
+
+//    QString renameOutput = fileRenameProcess.readAllStandardOutput();
+    QString renameError = fileRenameProcess.readAllStandardError();
+
+    if(renameError.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              renameError);
+    }
+    else
+    {
+        headerFileName = headerSha1Filename;
+        sendProgress->setAssembleFilesProgress(30);
+    }
+//    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;
+//    std::cout << "Rename Error:" << std::endl << renameError.toStdString() << std::endl;
+}
 
 
-    //Encrypt message body
-    //Make tempfile of body
-
-    //Sha1 attachment
-    //Encrypt attachment
-    //Make tempfile of attachment
 
 
-    //Compute timestamp token
-    //Upload header to server
 
-    //Compute timestamp token
-    //Upload message to server
+void MessageEditor::assembleMessage(void)
+{
 
-    //Compute timestamp token
-    //Upload attachment to server
 
-    std::cout << "Message sent" << std::endl;
+    QString messageBodyText = ui->messageTextBox->toPlainText();
 
-    QWidget::close();
+
+    //Make tempfile of msg
+
+    QTemporaryFile messageTemp;
+
+    messageTemp.open();
+    messageTemp.setAutoRemove(false);  // we will manually remove the temp files after send process is finished
+
+    QString messageTempName = messageTemp.fileName();
+
+    messageTemp.close();
+
+
+
+    //Encrypt message
+
+    QProcess encryptProcess;
+    QString encryptOutput;
+    QString encryptError;
+
+    QString encryptPipe = "gpg -e -u ";
+    encryptPipe.append(ui->fromPullDown->currentText());
+    encryptPipe.append(" -r ");
+    encryptPipe.append(ui->addresseePullDown->currentText());
+    encryptPipe.append(" >> ");
+    encryptPipe.append(messageTempName);
+
+//    std::cout << encryptPipe.toStdString() << std::endl;
+
+    encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+
+    encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    encryptProcess.write(messageBodyText.toLocal8Bit()); // then wait for bytes written before reading
+
+    encryptProcess.waitForBytesWritten();
+    encryptProcess.closeWriteChannel();
+    encryptProcess.waitForFinished();
+
+//    encryptOutput = encryptProcess.readAllStandardOutput();
+    encryptError = encryptProcess.readAllStandardError();
+
+
+    if(encryptError.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              encryptError);
+    }
+
+//    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
+//    std::cout << "Encrypt Error:" << std::endl << encryptError.toStdString() << std::endl;
+
+    encryptProcess.close();
+
+    //Sha1 hash the message
+
+    QProcess sha1process;
+
+    sha1process.start("sha1sum", QStringList() << messageTempName);
+
+    sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    sha1process.waitForFinished();
+
+    QString messageSha1(sha1process.readAllStandardOutput());
+    QString sha1err(sha1process.readAllStandardError());
+
+    if(sha1err.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              sha1err);
+    }
+
+    // Trim the hash info to the actual 40-character hash.  The other part is the filename or "-" if it was stdin
+    messageSha1 = messageSha1.left(40);
+
+//    std::cout << "sha1 Output:" << std::endl << headerSha1.toStdString() << std::endl;
+//    std::cout << "sha1 Error:" << std::endl << sha1err.toStdString() << std::endl;
+
+    sha1process.close();
+
+    QProcess fileRenameProcess;
+    QString messageSha1Filename = QString("/tmp/").append(messageSha1).append(".warp2.message");  //this is sloppy, need to find directory of original file dynamically
+    QString renamePipe = "mv ";
+    renamePipe.append(messageTempName);
+    renamePipe.append(" ");
+    renamePipe.append(messageSha1Filename);
+
+
+//    std::cout << headerTempName.toStdString() << " " << headerSha1Filename.toStdString() << std::endl;
+
+    fileRenameProcess.start("/bin/bash", QStringList() << "-c" << renamePipe);
+
+    fileRenameProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+    fileRenameProcess.waitForFinished();
+
+//    QString renameOutput = fileRenameProcess.readAllStandardOutput();
+    QString renameError = fileRenameProcess.readAllStandardError();
+
+    if(renameError.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              renameError);
+    }
+    else
+    {
+        messageFileName = messageSha1Filename;
+        sendProgress->setAssembleFilesProgress(60);
+
+    }
+//    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;
+//    std::cout << "Rename Error:" << std::endl << renameError.toStdString() << std::endl;
 }
 
 
