@@ -120,8 +120,8 @@ void MessageEditor::on_messageWindowSendButton_clicked()
     sendProgress -> show();
 
     sendProgress->setTotalProgress(0);
-    sendProgress->setAssembleFilesProgress(5);
-    //sendProgress->setUploadHeaderProgress(0);
+    sendProgress->setAssembleFilesProgress(0);
+    sendProgress->setUploadHeaderProgress(0);
     sendProgress->setUploadMessageProgress(0);
     sendProgress->setUploadAttachmentProgress(0);
 
@@ -129,8 +129,9 @@ void MessageEditor::on_messageWindowSendButton_clicked()
 
     this->assembleHeader();
     this->assembleMessage();
+    this->assembleAttachment();
 
-    sendProgress->setTotalProgress(30);
+    sendProgress->setTotalProgress(25);
 
 
     myMessageSender->uploadMessage(headerFileName,messageFileName,attachmentFileName);
@@ -230,9 +231,10 @@ void MessageEditor::assembleHeader(void)
     QString encryptOutput;
     QString encryptError;
 
-    QString encryptPipe = "gpg -e -u ";
-    encryptPipe.append(ui->fromPullDown->currentText());
-    encryptPipe.append(" -r ");
+//    QString encryptPipe = "gpg -a -e -u ";
+//    encryptPipe.append(ui->fromPullDown->currentText());
+
+    QString encryptPipe = "gpg -a -e -r ";
     encryptPipe.append(ui->addresseePullDown->currentText());
     encryptPipe.append(" >> ");
     encryptPipe.append(headerTempName);
@@ -322,7 +324,7 @@ void MessageEditor::assembleHeader(void)
     else
     {
         headerFileName = headerSha1Filename;
-        sendProgress->setAssembleFilesProgress(30);
+        sendProgress->setAssembleFilesProgress(33);
     }
 //    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;
 //    std::cout << "Rename Error:" << std::endl << renameError.toStdString() << std::endl;
@@ -358,9 +360,9 @@ void MessageEditor::assembleMessage(void)
     QString encryptOutput;
     QString encryptError;
 
-    QString encryptPipe = "gpg -e -u ";
-    encryptPipe.append(ui->fromPullDown->currentText());
-    encryptPipe.append(" -r ");
+//    QString encryptPipe = "gpg -e -u ";
+//    encryptPipe.append(ui->fromPullDown->currentText());
+    QString encryptPipe = "gpg -a -e -r ";
     encryptPipe.append(ui->addresseePullDown->currentText());
     encryptPipe.append(" >> ");
     encryptPipe.append(messageTempName);
@@ -451,7 +453,7 @@ void MessageEditor::assembleMessage(void)
     else
     {
         messageFileName = messageSha1Filename;
-        sendProgress->setAssembleFilesProgress(60);
+        sendProgress->setAssembleFilesProgress(66);
 
     }
 //    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;
@@ -459,7 +461,143 @@ void MessageEditor::assembleMessage(void)
 }
 
 
+
+
+void MessageEditor::assembleAttachment(void)
+{
+
+    attachmentFileName = ui->attachmentFileBox->text();
+
+    if(attachmentFileName.isEmpty() || !QFileInfo(attachmentFileName).exists())
+    {
+        std::cout << "No attachment to assemble." << std::endl;
+        attachmentFileName = "";
+        sendProgress->setAssembleFilesProgress(100);
+        return;
+    }
+
+
+
+    //Encrypt message
+
+    QProcess encryptProcess;
+    QString encryptOutput;
+    QString encryptError;
+
+//    QString encryptPipe = "gpg -e -u ";
+//    encryptPipe.append(ui->fromPullDown->currentText());
+    QString encryptPipe = "gpg -r ";
+    encryptPipe.append(ui->addresseePullDown->currentText());
+    encryptPipe.append(" --yes -a -e ");
+    encryptPipe.append(attachmentFileName);
+
+    std::cout << encryptPipe.toStdString() << std::endl;
+
+    encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+
+    encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    encryptProcess.waitForFinished();
+
+//    encryptOutput = encryptProcess.readAllStandardOutput();
+    encryptError = encryptProcess.readAllStandardError();
+
+
+    if(encryptError.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              encryptError);
+        return;
+    }
+
+    //GEt here, encryption worked
+    attachmentFileName = attachmentFileName.append(".asc");
+
+//    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
+//    std::cout << "Encrypt Error:" << std::endl << encryptError.toStdString() << std::endl;
+
+    encryptProcess.close();
+
+    //Sha1 hash the message
+
+    QProcess sha1process;
+
+    sha1process.start("sha1sum", QStringList() << attachmentFileName);
+
+    sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    sha1process.waitForFinished();
+
+    QString attachmentSha1(sha1process.readAllStandardOutput());
+    QString sha1err(sha1process.readAllStandardError());
+
+    if(sha1err.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              sha1err);
+    }
+
+    // Trim the hash info to the actual 40-character hash.  The other part is the filename or "-" if it was stdin
+    attachmentSha1 = attachmentSha1.left(40);
+
+//    std::cout << "sha1 Output:" << std::endl << headerSha1.toStdString() << std::endl;
+//    std::cout << "sha1 Error:" << std::endl << sha1err.toStdString() << std::endl;
+
+    sha1process.close();
+
+    QProcess fileRenameProcess;
+    QString attachmentSha1Filename = QString("/tmp/").append(attachmentSha1).append(".warp2.attachment");  //this is sloppy, need to find directory of original file dynamically
+    QString renamePipe = "cp ";
+    renamePipe.append(attachmentFileName);
+    renamePipe.append(" ");
+    renamePipe.append(attachmentSha1Filename);
+
+
+//    std::cout << headerTempName.toStdString() << " " << headerSha1Filename.toStdString() << std::endl;
+
+    fileRenameProcess.start("/bin/bash", QStringList() << "-c" << renamePipe);
+
+    fileRenameProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+    fileRenameProcess.waitForFinished();
+
+//    QString renameOutput = fileRenameProcess.readAllStandardOutput();
+    QString renameError = fileRenameProcess.readAllStandardError();
+
+    if(renameError.size() > 0)
+    {
+        QMessageBox::critical(
+              this,
+              "Critical Error",
+              renameError);
+    }
+    else
+    {
+        attachmentFileName = attachmentSha1Filename;
+        sendProgress->setAssembleFilesProgress(100);
+
+    }
+//    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;
+//    std::cout << "Rename Error:" << std::endl << renameError.toStdString() << std::endl;
+}
+
+
+
+
 void MessageEditor::updateHeaderProgress(int value)
 {
     sendProgress->setUploadHeaderProgress(value);
+}
+
+void MessageEditor::updateMessageProgress(int value)
+{
+    sendProgress->setUploadMessageProgress(value);
+}
+
+void MessageEditor::updateAttachmentProgress(int value)
+{
+    sendProgress->setUploadAttachmentProgress(value);
 }

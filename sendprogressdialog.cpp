@@ -50,7 +50,7 @@ SendProgressDialog::~SendProgressDialog()
 void SendProgressDialog::tactilepause()
 {
 
-        QTime dieTime = QTime::currentTime().addMSecs( 100 );
+        QTime dieTime = QTime::currentTime().addMSecs( 50 );
         while( QTime::currentTime() < dieTime )
         {
             QCoreApplication::processEvents( QEventLoop::AllEvents, 100 );

@@ -18,6 +18,9 @@ signals:
 
 public slots:
     void setUploadHeaderProgress(qint64 prog, qint64 progmax);
+    void setUploadMessageProgress(qint64 prog, qint64 progmax);
+    void setUploadAttachmentProgress(qint64 prog, qint64 progmax);
+
     void requestFinished(QNetworkReply *data);
 
 
@@ -26,6 +29,10 @@ private:
     QNetworkReply *netReply;
 
     bool headerSendComplete;
+
+
+    void uploadItem(QString itemName);
+
 
 };
 

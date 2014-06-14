@@ -18,6 +18,9 @@ public:
     ~MessageEditor();
 
     void updateHeaderProgress(int value);
+    void updateMessageProgress(int value);
+    void updateAttachmentProgress(int value);
+
 
 private slots:
     void on_messageWindowCancelButton_clicked();
