@@ -340,6 +340,20 @@ void MessageEditor::assembleMessage(void)
 
     QString messageBodyText = ui->messageTextBox->toPlainText();
 
+    QByteArray hash = QCryptographicHash::hash(messageBodyText.toAscii(), QCryptographicHash::Sha1);
+
+    messageComposeToken = hash.toHex();
+
+    std::cout << "Message:" << std::endl;
+
+    //Line endings need to be sorted out for different platforms - linux, windows etc.  Double check the hashes
+    //On linux, to get the same hash as in here, you need to do echo -n "string" | sha1sum, if you omit the "-n" then echo puts \n on the end!
+    std::cout << messageBodyText.toStdString() << std::endl;
+
+    std::cout << "Compose token:" << std::endl;
+
+    std::cout << messageComposeToken.toStdString() << std::endl;
+
 
     //Make tempfile of msg
 

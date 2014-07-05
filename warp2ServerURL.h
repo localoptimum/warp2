@@ -3,8 +3,8 @@
 
 #include <QString>
 
-//const QString serverURL="http://192.168.1.66/warp2/";
-const QString serverURL="http://localhost/warp2/";
+const QString serverURL="http://mail.gnamail.se/warp2/";
+//const QString serverURL="http://localhost/warp2/";
 
 
 

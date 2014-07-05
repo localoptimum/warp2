@@ -17,6 +17,7 @@ messageSender::messageSender(QObject *parent) :
     headerSendComplete = false;
 }
 
+
 void messageSender::uploadMessage(QString headerFileName, QString messageFileName, QString attachmentFileName)
 {
     uploadItem(headerFileName);
@@ -37,6 +38,8 @@ void messageSender::uploadMessage(QString headerFileName, QString messageFileNam
     }
 
     setTotalSendProgress(90,100);
+
+    //Need to add message hash to this as read/write proof token
     updateInbox(headerFileName, messageFileName, attachmentFileName);
     setTotalSendProgress(100,100);
 }

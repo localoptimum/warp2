@@ -39,6 +39,8 @@ private:
     QString headerFileName;
     QString messageFileName;
 
+    QString messageComposeToken;
+
     QString myEmailAddress;
 
     void assembleHeader();
