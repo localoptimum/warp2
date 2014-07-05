@@ -551,7 +551,7 @@ void MessageEditor::assembleAttachment(void)
 
     QProcess fileRenameProcess;
     QString attachmentSha1Filename = QString("/tmp/").append(attachmentSha1).append(".warp2.attachment");  //this is sloppy, need to find directory of original file dynamically
-    QString renamePipe = "cp ";
+    QString renamePipe = "mv ";
     renamePipe.append(attachmentFileName);
     renamePipe.append(" ");
     renamePipe.append(attachmentSha1Filename);
@@ -600,4 +600,9 @@ void MessageEditor::updateMessageProgress(int value)
 void MessageEditor::updateAttachmentProgress(int value)
 {
     sendProgress->setUploadAttachmentProgress(value);
+}
+
+void MessageEditor::updateTotalProgress(int value)
+{
+    sendProgress->setTotalProgress(value);
 }

@@ -17,13 +17,22 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     messageeditor.cpp \
     sendprogressdialog.cpp \
-    messagesender.cpp
+    messagesender.cpp \
+    keyListEditor.cpp \
+    idcreator.cpp \
+    keygenerator.cpp
 
 HEADERS  += mainwindow.h \
     messageeditor.h \
     sendprogressdialog.h \
-    messagesender.h
+    messagesender.h \
+    keyListEditor.h \
+    idcreator.h \
+    keygenerator.h \
+    warp2ServerURL.h
 
 FORMS    += mainwindow.ui \
     messageeditor.ui \
-    sendprogressdialog.ui
+    sendprogressdialog.ui \
+    keylisteditor.ui \
+    idcreator.ui

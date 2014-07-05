@@ -18,23 +18,26 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalButtonLayout">
       <item>
-       <widget class="QToolButton" name="mainContactsButton">
+       <widget class="QPushButton" name="mainContactsButton">
         <property name="text">
          <string>Manage Contacts</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="mainCreateMessageButton">
+       <widget class="QPushButton" name="mainCreateMessageButton">
         <property name="text">
          <string>Create Message</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="mainGetNewMessagesButton">
+       <widget class="QPushButton" name="mainGetNewMessagesButton">
         <property name="text">
          <string>Get New Messages</string>
+        </property>
+        <property name="default">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -62,15 +65,18 @@
     </rect>
    </property>
   </widget>
-  <widget class="QToolBar" name="mainToolBar">
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
    <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
+    <enum>BottomToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

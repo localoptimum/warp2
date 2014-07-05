@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "keyListEditor.h"
 #include "ui_mainwindow.h"
 #include "ui_messageeditor.h"
 
@@ -18,4 +19,10 @@ void MainWindow::on_mainCreateMessageButton_clicked()
 {
     messageEditor = new MessageEditor(this);
     messageEditor -> show();
+}
+
+void MainWindow::on_mainContactsButton_clicked()
+{
+    keyListEditor = new KeyListEditor(this);
+    keyListEditor -> show();
 }

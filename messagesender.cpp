@@ -1,8 +1,10 @@
 #include "messagesender.h"
 #include "messageeditor.h"
+#include "warp2ServerURL.h"
 
 #include <iostream>
 #include <QFile>
+#include <QFileInfo>
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QEventLoop>
@@ -18,7 +20,10 @@ messageSender::messageSender(QObject *parent) :
 void messageSender::uploadMessage(QString headerFileName, QString messageFileName, QString attachmentFileName)
 {
     uploadItem(headerFileName);
+    setTotalSendProgress(50,100);
+
     uploadItem(messageFileName);
+    setTotalSendProgress(75,100);
 
     if(attachmentFileName.isEmpty())
     {
@@ -31,6 +36,9 @@ void messageSender::uploadMessage(QString headerFileName, QString messageFileNam
         uploadItem(attachmentFileName);
     }
 
+    setTotalSendProgress(90,100);
+    updateInbox(headerFileName, messageFileName, attachmentFileName);
+    setTotalSendProgress(100,100);
 }
 
 void messageSender::uploadItem(QString itemName)
@@ -54,7 +62,10 @@ void messageSender::uploadItem(QString itemName)
     multiPart->append(textPart);
     multiPart->append(headerPart);
 
-    QUrl url("http://192.168.1.3/warp2/sendmail.php");
+    QString sendURL = serverURL;
+    sendURL.append("sendmail.php");
+
+    QUrl url(sendURL);
     QNetworkRequest request(url);
 
     QNetworkAccessManager manager;
@@ -76,11 +87,11 @@ void messageSender::uploadItem(QString itemName)
     }
 
 
-
     connect(netManager, SIGNAL(finished(QNetworkReply*)), SLOT(requestFinished(QNetworkReply*)));
 
 
     QEventLoop loop;
+
     QObject::connect(netReply, SIGNAL(readyRead()), &loop, SLOT(quit()));
 
     // Execute the event loop here, now we will wait here until readyRead() signal is emitted
@@ -89,6 +100,7 @@ void messageSender::uploadItem(QString itemName)
 
     std::cout << "Upload done" << std::endl;
 
+    delete(netReply);
 
 }
 
@@ -112,9 +124,73 @@ void messageSender::setUploadAttachmentProgress(qint64 prog, qint64 progmax)
      -> updateAttachmentProgress( 100*(int) ((float)prog / (float) progmax));
 }
 
+void messageSender::setTotalSendProgress(qint64 prog, qint64 progmax)
+{
+    qobject_cast<MessageEditor *>(parent())
+            ->updateTotalProgress( 100*(int) ((float)prog / (float) progmax));
+}
+
 
 
 void messageSender::requestFinished(QNetworkReply *data) {
     // Lets print the HTTP GET response.
     qDebug( netReply->readAll());
+}
+
+
+void messageSender::updateInbox(QString headerFileName, QString messageFileName, QString attachmentFileName)
+{
+
+    QString headerServer;
+    QString messageServer;
+    QString attachmentServer;
+
+    QFileInfo headerFinfo(headerFileName);
+    headerServer = headerFinfo.baseName();
+    headerServer.append(".header");
+
+    QFileInfo messageFinfo(messageFileName);
+    messageServer = messageFinfo.baseName();
+    messageServer.append(".message");
+
+    QString urlBuild=serverURL;
+    urlBuild.append("updateInbox.php?header=");
+    urlBuild.append(headerServer);
+
+    urlBuild.append("&message=");
+    urlBuild.append(messageServer);
+
+    urlBuild.append("&attachment=");
+
+    if(!attachmentFileName.isEmpty())
+    {
+        QFileInfo attachmentFinfo(attachmentFileName);
+        attachmentServer=attachmentFinfo.baseName();
+        attachmentServer.append(".attachment");
+
+        urlBuild.append(attachmentServer);
+    }
+    else
+    {
+        urlBuild.append("none");
+    }
+
+    QNetworkRequest request(urlBuild);
+
+    QNetworkAccessManager manager;
+    netReply = netManager->get(request);
+
+    // here connect signals etc.
+
+    connect(netManager, SIGNAL(finished(QNetworkReply*)), SLOT(requestFinished(QNetworkReply*)));
+
+
+    QEventLoop loop;
+    QObject::connect(netReply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+
+    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
+    // which in turn will trigger event loop quit.
+    loop.exec();
+
+    std::cout << "Inbox rebuild done" << std::endl;
 }

@@ -20,6 +20,7 @@ public slots:
     void setUploadHeaderProgress(qint64 prog, qint64 progmax);
     void setUploadMessageProgress(qint64 prog, qint64 progmax);
     void setUploadAttachmentProgress(qint64 prog, qint64 progmax);
+    void setTotalSendProgress(qint64 prog, qint64 progmax);
 
     void requestFinished(QNetworkReply *data);
 
@@ -32,7 +33,7 @@ private:
 
 
     void uploadItem(QString itemName);
-
+    void updateInbox(QString headerFileName, QString messageFileName, QString attachmentFileName);
 
 };
 

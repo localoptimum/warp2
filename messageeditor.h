@@ -20,6 +20,7 @@ public:
     void updateHeaderProgress(int value);
     void updateMessageProgress(int value);
     void updateAttachmentProgress(int value);
+    void updateTotalProgress(int value);
 
 
 private slots:
