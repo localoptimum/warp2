@@ -1,0 +1,37 @@
+Desktop Client
+
+* Timestamps.  Creating an ID initialises the "last read" timestamp.
+
+*  Hash of cleartext message as the "sent" token. 
+
+*  Reading a message sends the hash of the cleartext message as the "read" token back to the sever.
+
+*  AFTER EVERYTHING ELSE, rename the key addresses and add filters to the format "@warp2.net" or some other convenient server name, so that warp2 ID's are not mixed up with regular gpg2 behaviour and contacts.
+
+*  Import / export functionality on IDs.  Exports should not be of the form id_pub.asc but like username.warp2.publicID.
+
+*  DHT handling of header files, attachment files and message files, with redundancy, to scale the network and take the load off the server.  Most likely library is maidsafe-dht (kademlia)
+https://code.google.com/p/maidsafe-dht/
+
+
+
+Android Client (ported from desktop client in QT)
+
+* Unknown at present.  At first glance, it looks easy.  Never is.  Might also need libgcrypt function calls (see iOS below).
+
+
+iOS Client (native code)
+
+*  Using #ifdef (oh my god!) replace the "sh -c gpg" commands with function calls to http://directory.fsf.org/wiki/Libgcrypt.  Also requries some kind of key management.  This might not be so much work.
+
+
+
+Sever
+
+*  Inbox - mysql select.  Select all entries since last timestamp, where "read" token does not equal "sent" token ("read" token is null by default until client sends hash of message text).
+
+*  Periodic - delete rows from table where "read" token equals "sent" token.
+
+*  Periodic - delete rows from table where sent timestamp is more than X days old
+
+
