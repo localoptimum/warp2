@@ -36,8 +36,16 @@
 	$headerSQL = "'" . mysqli_real_escape_string($conn, $headerFile) . "'";
 	$messageSQL = "'" . mysqli_real_escape_string($conn, $messageFile) . "'";
 
-	$sql="INSERT INTO msg (timestamp, headerhash, msghash, atthash) VALUES(NOW(), $headerSQL, $messageSQL, NULL);";
- 
+	if($attachExists)
+	{
+		$attachSQL = "'" . mysqli_real_escape_string($conn, $attachFile) . "'";
+		$sql="INSERT INTO msg (timestamp, headerhash, msghash, atthash) VALUES(NOW(), $headerSQL, $messageSQL, $attachSQL);";
+	}
+	else
+	{
+		$sql="INSERT INTO msg (timestamp, headerhash, msghash, atthash) VALUES(NOW(), $headerSQL, $messageSQL, NULL);";
+ 	}
+
         if($conn->query($sql) === false)
 	{
 		trigger_error('Wrong SQL: ' . $sql . ' ERROR: ' . $conn->error, E_USER_ERROR);
