@@ -14,7 +14,7 @@ int keyGenerator::createKeys(QString username, QString simpleusername, QString p
 
     std::cout << "Launching gpg process" << std::endl;
 
-    QString gpgScript = "gpg --gen-key --batch --no-tty";
+    QString gpgScript = "gpg2 --gen-key --batch --no-tty";
 
     gpg.start("/bin/bash", QStringList() << "-c" << gpgScript);
 

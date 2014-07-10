@@ -340,7 +340,7 @@ void MessageEditor::assembleMessage(void)
 
     QString messageBodyText = ui->messageTextBox->toPlainText();
 
-    QByteArray hash = QCryptographicHash::hash(messageBodyText.toAscii(), QCryptographicHash::Sha1);
+    QByteArray hash = QCryptographicHash::hash(messageBodyText.toLocal8Bit(), QCryptographicHash::Sha1);
 
     messageComposeToken = hash.toHex();
 

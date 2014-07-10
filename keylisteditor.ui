@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Key List Editor Gibbon</string>
+   <string>Key List Editor</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -43,14 +43,19 @@
        </widget>
       </item>
      </layout>
-     <zorder>privateKeyTable</zorder>
-     <zorder>publicKeyTable</zorder>
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="toolButton">
+    <widget class="QToolButton" name="newPrivateIDButton">
      <property name="text">
       <string>New Private ID</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolButton" name="exportPublicKeyButton">
+     <property name="text">
+      <string>Save public key contact file to give to your friends...</string>
      </property>
     </widget>
    </item>
@@ -80,19 +85,17 @@
        </widget>
       </item>
      </layout>
-     <zorder>publicKeyTable</zorder>
-     <zorder>groupBox</zorder>
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="toolButton_2">
+    <widget class="QToolButton" name="importContactButton">
      <property name="text">
-      <string>Import contact</string>
+      <string>Import a friend's public key contact file...</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="toolButton_3">
+    <widget class="QToolButton" name="doneButton">
      <property name="text">
       <string>Done</string>
      </property>

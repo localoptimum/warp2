@@ -1,5 +1,6 @@
 #include <QProcess>
 #include <QTableWidget>
+#include <QFileDialog>
 #include "keyListEditor.h"
 #include "idcreator.h"
 #include "ui_keylisteditor.h"
@@ -20,7 +21,7 @@ KeyListEditor::KeyListEditor(QWidget *parent) :
 
     // GET THE PUBLIC KEYS OF ALL KNOWN CONTACTS
 
-    gpgGetKeys.start("gpg  --list-keys");
+    gpgGetKeys.start("gpg2  --list-keys");
 
     gpgGetKeys.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -51,7 +52,7 @@ KeyListEditor::KeyListEditor(QWidget *parent) :
 
     // GET MY PRIVATE KEY
 
-    gpgGetSecretKeys.start("gpg  --list-secret-keys");
+    gpgGetSecretKeys.start("gpg2 --list-secret-keys");
 
     gpgGetSecretKeys.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -80,13 +81,40 @@ KeyListEditor::~KeyListEditor()
     delete ui;
 }
 
-void KeyListEditor::on_toolButton_3_clicked()
+
+void KeyListEditor::on_exportPublicKeyButton_clicked()
+{
+    QFileDialog * saveDialog;
+
+    saveDialog = new QFileDialog(this);
+
+    saveDialog->setDirectory(QDir::homePath());
+
+    saveDialog->setNameFilter("*.warp2ID.asc");
+
+    saveDialog->show();
+}
+
+void KeyListEditor::on_doneButton_clicked()
 {
     QWidget::close();
 }
 
-void KeyListEditor::on_toolButton_clicked()
+void KeyListEditor::on_newPrivateIDButton_clicked()
 {
     IDCreator *idc = new IDCreator(this);
     idc->show();
+}
+
+void KeyListEditor::on_importContactButton_clicked()
+{
+    QFileDialog *loadDialog;
+
+    loadDialog = new QFileDialog(this);
+
+    loadDialog->setDirectory(QDir::homePath());
+
+    loadDialog->setNameFilter("*.warp2ID.asc");
+
+    loadDialog->show();
 }

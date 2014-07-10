@@ -16,9 +16,14 @@ public:
     ~KeyListEditor();
 
 private slots:
-    void on_toolButton_3_clicked();
 
-    void on_toolButton_clicked();
+    void on_exportPublicKeyButton_clicked();
+
+    void on_doneButton_clicked();
+
+    void on_newPrivateIDButton_clicked();
+
+    void on_importContactButton_clicked();
 
 private:
     Ui::KeyListEditor *ui;
