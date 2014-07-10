@@ -143,15 +143,25 @@ void KeyListEditor::on_newPrivateIDButton_clicked()
 
 void KeyListEditor::on_importContactButton_clicked()
 {
-    QFileDialog *loadDialog;
+    QString startpath = QDir::homePath();
 
-    loadDialog = new QFileDialog(this);
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load File"),
+                                startpath,
+                                tr("*.warp2ID.asc"));
 
-    loadDialog->setDirectory(QDir::homePath());
+    std::cout << "Importing contact " << fileName.toStdString() << std::endl;
 
-    loadDialog->setNameFilter("*.warp2ID.asc");
+    QString gpgScript = "gpg2 --import ";
+    gpgScript.append(fileName);
 
-    loadDialog->show();
+    gpg.start("/bin/bash", QStringList() << "-c" << gpgScript);
+
+    gpg.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    std::cout << "Connecting std out" << std::endl;
+    connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
+    connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
+
 }
 
 
