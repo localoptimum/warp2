@@ -5,6 +5,8 @@
 #include "idcreator.h"
 #include "ui_keylisteditor.h"
 
+#include <iostream>
+
 KeyListEditor::KeyListEditor(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::KeyListEditor)
@@ -86,13 +88,46 @@ void KeyListEditor::on_exportPublicKeyButton_clicked()
 {
     QFileDialog * saveDialog;
 
-    saveDialog = new QFileDialog(this);
+    QString idStem = ui->privateKeyTable->selectedItems().first()->text();
 
-    saveDialog->setDirectory(QDir::homePath());
+    QString idName = idStem;
 
-    saveDialog->setNameFilter("*.warp2ID.asc");
+    idName.append(".warp2ID.asc");
 
-    saveDialog->show();
+    QString startpath;
+
+    startpath = QDir::homePath();
+
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                                startpath,
+                                tr("*.warp2ID.asc"));
+
+    //Remove any file extension that is given by trimming everything after the first "."
+
+    QString finalFilename = fileName.section(".",0,0);
+
+    finalFilename.append(".warp2ID.asc");
+
+    std::cout << "Saving " << idStem.toStdString() << " as " << finalFilename.toStdString() << std::endl;
+
+    std::cout << "Launching gpg process" << std::endl;
+
+    QString gpgScript = "gpg2 --export --armor --output ";
+    gpgScript.append(finalFilename);
+    gpgScript.append(" ");
+    gpgScript.append(idStem);
+
+    gpg.start("/bin/bash", QStringList() << "-c" << gpgScript);
+
+    gpg.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    std::cout << "Connecting std out" << std::endl;
+    connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
+    connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
+
+
+
 }
 
 void KeyListEditor::on_doneButton_clicked()
@@ -117,4 +152,18 @@ void KeyListEditor::on_importContactButton_clicked()
     loadDialog->setNameFilter("*.warp2ID.asc");
 
     loadDialog->show();
+}
+
+
+void KeyListEditor::readSlot(void)
+{
+    QString readData = gpg.readAllStandardOutput();
+    std::cout << readData.toStdString() << std::endl;
+}
+
+
+void KeyListEditor::errorSlot(void)
+{
+    QString readData = gpg.readAllStandardError();
+    std::cerr << readData.toStdString() << std::endl;
 }

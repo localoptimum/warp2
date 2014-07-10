@@ -2,6 +2,7 @@
 #define KEYLISTEDITOR_H
 
 #include <QDialog>
+#include <QProcess>
 
 namespace Ui {
 class KeyListEditor;
@@ -25,8 +26,13 @@ private slots:
 
     void on_importContactButton_clicked();
 
+    void readSlot();
+    void errorSlot();
+
 private:
     Ui::KeyListEditor *ui;
+
+    QProcess gpg;
 };
 
 #endif // KEYLISTEDITOR_H
