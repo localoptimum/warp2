@@ -36,7 +36,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
              this, SLOT(finishedSlot(QNetworkReply*)));
 
-    QUrl url("http://localhost");
+    QUrl url("http://www.google.se");
     QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
     // NOTE: Store QNetworkReply pointer (maybe into caller).
     // When this HTTP request is finished you will receive this same
@@ -79,18 +79,24 @@ void MainWindow::finishedSlot(QNetworkReply* reply)
         // Example 2: Reading bytes form the reply
         bytes = reply->readAll();  // bytes
         serverReply = new QString(bytes); // string
+
+        std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
+
+        std::cout << serverReply->toStdString() << std::endl;
+
     }
     // Some http error received
     else
     {
         // handle errors here
-    }
+        std::cout << "Errors in reading URL" << std::endl;
 
-    std::cout << serverReply->toStdString() << std::endl;
+        std::cout << reply->errorString().toStdString() << std::endl;
+    }
 
     // We receive ownership of the reply object
     // and therefore need to handle deletion.
-    delete reply;
+    reply->deleteLater();
 }
 
 
