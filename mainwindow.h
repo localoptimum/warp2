@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QNetworkAccessManager>
 #include "messageeditor.h"
 #include "keyListEditor.h"
 
@@ -22,10 +23,15 @@ private slots:
 
     void on_mainContactsButton_clicked();
 
+    void on_mainGetNewMessagesButton_clicked();
+
+    void finishedSlot(QNetworkReply* reply);
+
 private:
     Ui::MainWindow *ui;
     MessageEditor *messageEditor;
     KeyListEditor *keyListEditor;
+    QNetworkAccessManager* netmanager;
 };
 
 #endif // MAINWINDOW_H
