@@ -28,11 +28,16 @@ private slots:
 
     void readSlot();
     void errorSlot();
-
+//Hanna
+    void loadPrivateKeys();
+    void loadPublicKeys();
+    void updateKeys();
 private:
     Ui::KeyListEditor *ui;
 
     QProcess gpg;
+
+    QString gpgPath; //H
 };
 
 #endif // KEYLISTEDITOR_H

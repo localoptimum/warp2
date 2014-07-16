@@ -56,6 +56,7 @@ void IDCreator::on_IDgenerateOK_clicked()
     std::cout << password.toStdString() << std::endl;
 
     keyGenerator * keygen = new keyGenerator();
+    connect(keygen, SIGNAL(keyGenerated()), this, SLOT(keyGenerated())); //connect keygenerator to keylisteditor, for updating
 
     int keygenerror = keygen->createKeys(fullusername, simpleusername, password);
 
@@ -75,4 +76,8 @@ void IDCreator::on_IDgenerateOK_clicked()
 void IDCreator::on_IDgenerateCancel_clicked()
 {
     QWidget::close();
+}
+
+void IDCreator::keyGenerated(){
+    emit updateKeys();
 }

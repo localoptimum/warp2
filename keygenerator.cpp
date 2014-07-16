@@ -2,6 +2,7 @@
 #include <QString>
 #include <QProcess>
 #include <iostream>
+#include <QStandardPaths>
 
 keyGenerator::keyGenerator(QObject *parent) :
     QObject(parent)
@@ -13,10 +14,19 @@ int keyGenerator::createKeys(QString username, QString simpleusername, QString p
 {
 
     std::cout << "Launching gpg process" << std::endl;
+    //find gpg2/gpg path
+    QString gpgPath = QStandardPaths::findExecutable("gpg2", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/" << "/usr/local/MacGPG2/bin/");
+    if(gpgPath.isEmpty()){
+        //std::cout << "gpg2 not found" << std::endl;
+        gpgPath = QStandardPaths::findExecutable("gpg", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/");
+    }
+    if(gpgPath.isEmpty()){
+        std::cerr << "gpg not found" << std::endl;
+    }
+    gpg.start(gpgPath, QStringList() << "--gen-key" << "--batch" << "--no-tty");
 
-    QString gpgScript = "gpg2 --gen-key --batch --no-tty";
-
-    gpg.start("/bin/bash", QStringList() << "-c" << gpgScript);
+    //QString gpgScript = "gpg2 --gen-key --batch --no-tty";
+    //gpg.start("/bin/bash", QStringList() << "-c" << gpgScript);
 
     gpg.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -63,7 +73,7 @@ int keyGenerator::createKeys(QString username, QString simpleusername, QString p
     return(0);
 }
 
-    void keyGenerator::readSlot(void)
+    void keyGenerator::readSlot(void) // all output is directed to stderr..
     {
         QString readData = gpg.readAllStandardOutput();
         std::cout << readData.toStdString() << std::endl;
@@ -74,4 +84,5 @@ int keyGenerator::createKeys(QString username, QString simpleusername, QString p
     {
         QString readData = gpg.readAllStandardError();
         std::cerr << readData.toStdString() << std::endl;
+        emit keyGenerated(); //emitting three times per key generated
     }

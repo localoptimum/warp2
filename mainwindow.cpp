@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    messageEditor = new MessageEditor(this);
+    keyListEditor = new KeyListEditor(this);
 }
 
 MainWindow::~MainWindow()
@@ -18,14 +20,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_mainCreateMessageButton_clicked()
 {
-    messageEditor = new MessageEditor(this);
-    messageEditor -> show();
+    if(!messageEditor->isVisible()){
+        messageEditor -> show();
+        //std::cout << "not visible" << std::endl;
+    }else{
+        messageEditor->raise();
+        messageEditor->activateWindow();
+        //std::cout << "not active window" << std::endl;
+    }
 }
 
 void MainWindow::on_mainContactsButton_clicked()
 {
-    keyListEditor = new KeyListEditor(this);
-    keyListEditor -> show();
+    if(!keyListEditor->isVisible()){
+        keyListEditor -> show();
+        //std::cout << "not visible" << std::endl;
+    }else{
+        keyListEditor->raise();
+        keyListEditor->activateWindow();
+        //std::cout << "not active window" << std::endl;
+    }
 }
 
 void MainWindow::on_mainGetNewMessagesButton_clicked()

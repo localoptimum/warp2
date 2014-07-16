@@ -4,6 +4,9 @@
 #include "keyListEditor.h"
 #include "idcreator.h"
 #include "ui_keylisteditor.h"
+#include <QStandardPaths>
+#include <QAbstractItemView>
+#include <QMessageBox>
 
 #include <iostream>
 
@@ -11,19 +14,32 @@ KeyListEditor::KeyListEditor(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::KeyListEditor)
 {
-    int i;
     ui->setupUi(this);
+    ui->privateKeyTable->setEditTriggers(QAbstractItemView::NoEditTriggers); //Disable editing of key-rows
+    ui->publicKeyTable->setEditTriggers(QAbstractItemView::NoEditTriggers); //Disable editing of key-rows
+
+    //find gpg2/gpg path
+    gpgPath = QStandardPaths::findExecutable("gpg2", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/" << "/usr/local/MacGPG2/bin/"); //H
+    if(gpgPath.isEmpty()){
+        //std::cout << "gpg2 not found" << std::endl;
+        gpgPath = QStandardPaths::findExecutable("gpg", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/");
+    }
+    if(gpgPath.isEmpty()){
+        std::cerr << "gpg not found" << std::endl;
+    }
 
     //std::cout << "Getting keys" << std::endl;
+    loadPublicKeys();
+    loadPrivateKeys();
+}
 
-    QProcess gpgGetKeys;
-    QProcess gpgGetSecretKeys;
-
-
-
+void KeyListEditor::loadPublicKeys(){
     // GET THE PUBLIC KEYS OF ALL KNOWN CONTACTS
+    int i;
+    QProcess gpgGetKeys;
 
-    gpgGetKeys.start("gpg2  --list-keys");
+    //gpgGetKeys.start("gpg2  --list-keys");
+    gpgGetKeys.start(gpgPath, QStringList() << "--list-keys");
 
     gpgGetKeys.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -31,7 +47,6 @@ KeyListEditor::KeyListEditor(QWidget *parent) :
 
     QString output(gpgGetKeys.readAllStandardOutput());
     QString errorout(gpgGetKeys.readAllStandardError());
-
 
     QStringList templist1, templist2;
 
@@ -49,20 +64,23 @@ KeyListEditor::KeyListEditor(QWidget *parent) :
             ui->publicKeyTable->setItem(i,0, new QTableWidgetItem(addresses.at(i)));
             ui->publicKeyTable->setHorizontalHeaderLabels(QString("Contact;Username").split(";"));
         }
+}
 
-
-
+void KeyListEditor::loadPrivateKeys(){
     // GET MY PRIVATE KEY
+    int i;
+    QProcess gpgGetSecretKeys;
 
-    gpgGetSecretKeys.start("gpg2 --list-secret-keys");
+    //gpgGetSecretKeys.start("gpg2  --list-secret-keys");
+    gpgGetSecretKeys.start(gpgPath, QStringList() << "--list-secret-keys");
 
     gpgGetSecretKeys.setProcessChannelMode(QProcess::ForwardedChannels);
 
     gpgGetSecretKeys.waitForFinished();
 
-    output = gpgGetSecretKeys.readAllStandardOutput();
+    QString output = gpgGetSecretKeys.readAllStandardOutput();
 
-    linesplit = output.split(QRegExp("\>|\<"));
+    QStringList linesplit = output.split(QRegExp("\>|\<"));
     QStringList fromaddresses = linesplit.filter(QRegExp(".*@.*"));
 
     fromaddresses.removeDuplicates();
@@ -77,6 +95,11 @@ KeyListEditor::KeyListEditor(QWidget *parent) :
             ui->privateKeyTable->setHorizontalHeaderLabels(QString("ID;Username").split(";"));
         }
 }
+void KeyListEditor::updateKeys(){
+    //std::cout << "updating" << std::endl;
+    loadPrivateKeys();
+    loadPublicKeys();
+}
 
 KeyListEditor::~KeyListEditor()
 {
@@ -87,46 +110,56 @@ KeyListEditor::~KeyListEditor()
 void KeyListEditor::on_exportPublicKeyButton_clicked()
 {
     QFileDialog * saveDialog;
+    //Check if key is selected. If not, display info message.
+    if(ui->privateKeyTable->selectedItems().isEmpty()){
+        QMessageBox::information(
+              this,
+              "Action required",
+              "Select key for exporting");
+    }else{
+        QString idStem = ui->privateKeyTable->selectedItems().first()->text();
 
-    QString idStem = ui->privateKeyTable->selectedItems().first()->text();
+        QString idName = idStem;
 
-    QString idName = idStem;
+        idName.append(".warp2ID.asc");
 
-    idName.append(".warp2ID.asc");
+        QString startpath;
 
-    QString startpath;
-
-    startpath = QDir::homePath();
+        startpath = QDir::homePath();
 
 
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
                                 startpath,
                                 tr("*.warp2ID.asc"));
 
-    //Remove any file extension that is given by trimming everything after the first "."
+        //If fileName is empty, user cancelled export
+        if(!fileName.isEmpty()){
 
-    QString finalFilename = fileName.section(".",0,0);
+            //Remove any file extension that is given by trimming everything after the first "."
 
-    finalFilename.append(".warp2ID.asc");
+            QString finalFilename = fileName.section(".",0,0);
 
-    std::cout << "Saving " << idStem.toStdString() << " as " << finalFilename.toStdString() << std::endl;
+            finalFilename.append(".warp2ID.asc");
 
-    std::cout << "Launching gpg process" << std::endl;
+            std::cout << "Saving " << idStem.toStdString() << " as " << finalFilename.toStdString() << std::endl;
 
-    QString gpgScript = "gpg2 --export --armor --output ";
-    gpgScript.append(finalFilename);
-    gpgScript.append(" ");
-    gpgScript.append(idStem);
+            std::cout << "Launching gpg process" << std::endl;
 
-    gpg.start("/bin/bash", QStringList() << "-c" << gpgScript);
+            // QString gpgScript = "--export --armor --output ";
+            // gpgScript.append(finalFilename);
+            // gpgScript.append(" ");
+            // gpgScript.append(idStem);
 
-    gpg.setProcessChannelMode(QProcess::ForwardedChannels);
+            gpg.start(gpgPath, QStringList() << "--export" << "--armor" << "--output" << finalFilename << idStem);
 
-    std::cout << "Connecting std out" << std::endl;
-    connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
-    connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
+            gpg.setProcessChannelMode(QProcess::ForwardedChannels);
 
+            std::cout << "Connecting std out" << std::endl;
+            connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
+            connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
+        }
 
+    }
 
 }
 
@@ -138,6 +171,7 @@ void KeyListEditor::on_doneButton_clicked()
 void KeyListEditor::on_newPrivateIDButton_clicked()
 {
     IDCreator *idc = new IDCreator(this);
+    connect(idc, SIGNAL(updateKeys()), this, SLOT(updateKeys())); //Hanna
     idc->show();
 }
 
@@ -151,10 +185,10 @@ void KeyListEditor::on_importContactButton_clicked()
 
     std::cout << "Importing contact " << fileName.toStdString() << std::endl;
 
-    QString gpgScript = "gpg2 --import ";
-    gpgScript.append(fileName);
+   // QString gpgScript = "gpg2 --import ";
+   // gpgScript.append(fileName);
 
-    gpg.start("/bin/bash", QStringList() << "-c" << gpgScript);
+    gpg.start(gpgPath, QStringList() << "--import" << fileName);
 
     gpg.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -162,6 +196,7 @@ void KeyListEditor::on_importContactButton_clicked()
     connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
     connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
 
+    updateKeys(); //update keys in view
 }
 
 

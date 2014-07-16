@@ -43,6 +43,9 @@ private:
 
     QString myEmailAddress;
 
+    QString gpgPath; //H
+    QString shaPath; //H
+
     void assembleHeader();
     void assembleMessage();
     void assembleAttachment();

@@ -14,12 +14,14 @@ class IDCreator : public QDialog
 public:
     explicit IDCreator(QWidget *parent = 0);
     ~IDCreator();
-
+signals:
+    void updateKeys(); //Hanna
 private slots:
 
     void on_IDgenerateOK_clicked();
     void on_IDgenerateCancel_clicked();
 
+    void keyGenerated(); //Hanna
 
 private:
     Ui::IDCreator *ui;
