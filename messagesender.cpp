@@ -23,6 +23,7 @@ void messageSender::uploadMessage(QString headerFileName, QString messageFileNam
     uploadItem(headerFileName);
     setTotalSendProgress(50,100);
 
+
     uploadItem(messageFileName);
     setTotalSendProgress(75,100);
 
