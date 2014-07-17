@@ -13,6 +13,7 @@
 #include <QNetworkRequest>
 #include <QTemporaryFile>
 #include <iostream>
+#include <QStandardPaths>
 
 MessageEditor::MessageEditor(QWidget *parent) :
     QDialog(parent),
@@ -22,6 +23,25 @@ MessageEditor::MessageEditor(QWidget *parent) :
 
     ui->setupUi(this);
 
+    //find gpg2/gpg path
+    gpgPath = QStandardPaths::findExecutable("gpg2", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/" << "/usr/local/MacGPG2/bin/");
+    if(gpgPath.isEmpty()){
+        //std::cout << "gpg2 not found" << std::endl;
+        gpgPath = QStandardPaths::findExecutable("gpg", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/");
+    }
+    if(gpgPath.isEmpty()){
+        std::cerr << "gpg not found" << std::endl;
+    }
+
+    //find sha/sha1 path
+    shaPath = QStandardPaths::findExecutable("sha1sum", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/");
+    if(shaPath.isEmpty()){
+        //std::cout << "sha1 not found" << std::endl;
+        shaPath = QStandardPaths::findExecutable("shasum", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/");
+    }
+    if(shaPath.isEmpty()){
+        std::cerr << "sha not found" << std::endl;
+    }
     //std::cout << "Getting keys" << std::endl;
 
     QProcess gpgGetKeys;
@@ -31,7 +51,9 @@ MessageEditor::MessageEditor(QWidget *parent) :
 
     // GET THE PUBLIC KEYS OF ALL KNOWN CONTACTS
 
-    gpgGetKeys.start("gpg  --list-keys");
+    //gpgGetKeys.start("gpg  --list-keys");
+
+    gpgGetKeys.start(gpgPath, QStringList() << "--list-keys");
 
     gpgGetKeys.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -59,7 +81,9 @@ MessageEditor::MessageEditor(QWidget *parent) :
 
     // GET MY PRIVATE KEY
 
-    gpgGetSecretKeys.start("gpg  --list-secret-keys");
+    //gpgGetSecretKeys.start("gpg  --list-secret-keys");
+
+    gpgGetSecretKeys.start(gpgPath, QStringList() << "--list-secret-keys");
 
     gpgGetSecretKeys.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -234,14 +258,17 @@ void MessageEditor::assembleHeader(void)
 //    QString encryptPipe = "gpg -a -e -u ";
 //    encryptPipe.append(ui->fromPullDown->currentText());
 
+    /*** Replaced by encryptProcess.start(gpgPath,...)
     QString encryptPipe = "gpg -a -e -r ";
     encryptPipe.append(ui->addresseePullDown->currentText());
     encryptPipe.append(" >> ");
     encryptPipe.append(headerTempName);
+    */
 
 //    std::cout << encryptPipe.toStdString() << std::endl;
 
-    encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+   // encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+    encryptProcess.start(gpgPath, QStringList() << "-c" << "-a" << "-r" << ui->addresseePullDown->currentText() << "-e" << headerTempName);
 
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -272,7 +299,8 @@ void MessageEditor::assembleHeader(void)
 
     QProcess sha1process;
 
-    sha1process.start("sha1sum", QStringList() << headerTempName);
+    //sha1process.start("sha1sum", QStringList() << headerTempName);
+    sha1process.start(shaPath, QStringList() << headerTempName);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -303,9 +331,7 @@ void MessageEditor::assembleHeader(void)
     renamePipe.append(" ");
     renamePipe.append(headerSha1Filename);
 
-
 //    std::cout << headerTempName.toStdString() << " " << headerSha1Filename.toStdString() << std::endl;
-
     fileRenameProcess.start("/bin/bash", QStringList() << "-c" << renamePipe);
 
     fileRenameProcess.setProcessChannelMode(QProcess::ForwardedChannels);
@@ -366,7 +392,7 @@ void MessageEditor::assembleMessage(void)
 
     messageTemp.close();
 
-
+std::cout << "temp: " << messageTempName.toStdString() << std::endl;
 
     //Encrypt message
 
@@ -376,14 +402,17 @@ void MessageEditor::assembleMessage(void)
 
 //    QString encryptPipe = "gpg -e -u ";
 //    encryptPipe.append(ui->fromPullDown->currentText());
+
+    /*** Replaced by encryptProcess.start(gpgPath,...)
     QString encryptPipe = "gpg -a -e -r ";
     encryptPipe.append(ui->addresseePullDown->currentText());
     encryptPipe.append(" >> ");
     encryptPipe.append(messageTempName);
-
+    */
 //    std::cout << encryptPipe.toStdString() << std::endl;
 
-    encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+    //encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+    encryptProcess.start(gpgPath, QStringList() << "-c" << "-a" << "-r" << ui->addresseePullDown->currentText() << "-e" << messageTempName);
 
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -414,7 +443,8 @@ void MessageEditor::assembleMessage(void)
 
     QProcess sha1process;
 
-    sha1process.start("sha1sum", QStringList() << messageTempName);
+    //sha1process.start("sha1sum", QStringList() << messageTempName);
+    sha1process.start(shaPath, QStringList() << messageTempName);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -434,7 +464,7 @@ void MessageEditor::assembleMessage(void)
     // Trim the hash info to the actual 40-character hash.  The other part is the filename or "-" if it was stdin
     messageSha1 = messageSha1.left(40);
 
-//    std::cout << "sha1 Output:" << std::endl << headerSha1.toStdString() << std::endl;
+//    std::cout << "sha1 Output:" << std::endl << messageSha1.toStdString() << std::endl;
 //    std::cout << "sha1 Error:" << std::endl << sha1err.toStdString() << std::endl;
 
     sha1process.close();
@@ -447,7 +477,7 @@ void MessageEditor::assembleMessage(void)
     renamePipe.append(messageSha1Filename);
 
 
-//    std::cout << headerTempName.toStdString() << " " << headerSha1Filename.toStdString() << std::endl;
+//    std::cout << messageTempName.toStdString() << " " << messageSha1Filename.toStdString() << std::endl;
 
     fileRenameProcess.start("/bin/bash", QStringList() << "-c" << renamePipe);
 
@@ -500,14 +530,18 @@ void MessageEditor::assembleAttachment(void)
 
 //    QString encryptPipe = "gpg -e -u ";
 //    encryptPipe.append(ui->fromPullDown->currentText());
+
+    /*** Replaced by encryptProcess.start(gpgPath,...)
     QString encryptPipe = "gpg -r ";
     encryptPipe.append(ui->addresseePullDown->currentText());
     encryptPipe.append(" --yes -a -e ");
     encryptPipe.append(attachmentFileName);
 
     std::cout << encryptPipe.toStdString() << std::endl;
+    */
 
-    encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+    //encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+    encryptProcess.start(gpgPath, QStringList() << "-c" << "-r" << ui->addresseePullDown->currentText() << "--yes" << "-a" << "-e" << attachmentFileName);
 
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -515,7 +549,6 @@ void MessageEditor::assembleAttachment(void)
 
 //    encryptOutput = encryptProcess.readAllStandardOutput();
     encryptError = encryptProcess.readAllStandardError();
-
 
     if(encryptError.size() > 0)
     {
@@ -538,7 +571,8 @@ void MessageEditor::assembleAttachment(void)
 
     QProcess sha1process;
 
-    sha1process.start("sha1sum", QStringList() << attachmentFileName);
+    //sha1process.start("sha1sum", QStringList() << attachmentFileName);
+    sha1process.start(shaPath, QStringList() << attachmentFileName);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -558,7 +592,7 @@ void MessageEditor::assembleAttachment(void)
     // Trim the hash info to the actual 40-character hash.  The other part is the filename or "-" if it was stdin
     attachmentSha1 = attachmentSha1.left(40);
 
-//    std::cout << "sha1 Output:" << std::endl << headerSha1.toStdString() << std::endl;
+//    std::cout << "sha1 Output:" << std::endl << attachmentSha1.toStdString() << std::endl;
 //    std::cout << "sha1 Error:" << std::endl << sha1err.toStdString() << std::endl;
 
     sha1process.close();
@@ -569,7 +603,6 @@ void MessageEditor::assembleAttachment(void)
     renamePipe.append(attachmentFileName);
     renamePipe.append(" ");
     renamePipe.append(attachmentSha1Filename);
-
 
 //    std::cout << headerTempName.toStdString() << " " << headerSha1Filename.toStdString() << std::endl;
 

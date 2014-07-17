@@ -18,7 +18,7 @@ private:
 
 
 signals:
-
+    void keyGenerated();
 public slots:
         void readSlot();
         void errorSlot();
