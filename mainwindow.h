@@ -32,6 +32,18 @@ private:
     MessageEditor *messageEditor;
     KeyListEditor *keyListEditor;
     QNetworkAccessManager* netmanager;
+
+    QStringList newMsgHashes;
+
+
+    void downloadHeader(QString headerHash);
+
+    void decryptHeader(QString headerHash);
+
+    void downloadMessage(QString msgHash);
+
+    void downloadAttachment(QString attachHash);
+
 };
 
 #endif // MAINWINDOW_H

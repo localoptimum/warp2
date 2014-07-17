@@ -30,13 +30,17 @@ void MainWindow::on_mainContactsButton_clicked()
 
 void MainWindow::on_mainGetNewMessagesButton_clicked()
 {
+
+    //Need to make an inbox reader class
+    //Need to make a class to download messages, headers and attachments - toggle http and dht within the class
+
     //Get list of message headers from server since last timestamp
 
     netmanager = new QNetworkAccessManager(this);
     QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
              this, SLOT(finishedSlot(QNetworkReply*)));
 
-    QUrl url("http://www.google.se");
+    QUrl url("http://192.168.1.66/warp2/readInbox.php");
     QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
     // NOTE: Store QNetworkReply pointer (maybe into caller).
     // When this HTTP request is finished you will receive this same
@@ -53,14 +57,22 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
         //Add the message and attachment as necessary and store them locally.
         //Add a reference to them to the list of messages in the main display
 
-
-
 }
+
+
+void MainWindow::downloadHeader(QString headerHash)
+{}
+
+void MainWindow::decryptHeader(QString headerHash)
+{}
 
 void MainWindow::finishedSlot(QNetworkReply* reply)
 {
     QString * serverReply;
     QByteArray bytes;
+
+    int i;
+    int idx;
 
     // Reading attributes of the reply
     // e.g. the HTTP status code
@@ -83,6 +95,10 @@ void MainWindow::finishedSlot(QNetworkReply* reply)
         std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
 
         std::cout << serverReply->toStdString() << std::endl;
+
+        QStringList msgHashList = serverReply->split(QRegExp("\n\|\r\n\|\r"));
+
+        newMsgHashes = msgHashList.filter(".header");
 
     }
     // Some http error received
