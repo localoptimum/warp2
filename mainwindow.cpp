@@ -54,7 +54,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
              this, SLOT(finishedSlot(QNetworkReply*)));
 
-    QUrl url("http://192.168.1.66/warp2/readInbox.php");
+    QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
     QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
     // NOTE: Store QNetworkReply pointer (maybe into caller).
     // When this HTTP request is finished you will receive this same
