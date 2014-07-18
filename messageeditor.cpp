@@ -392,8 +392,6 @@ void MessageEditor::assembleMessage(void)
 
     messageTemp.close();
 
-std::cout << "temp: " << messageTempName.toStdString() << std::endl;
-
     //Encrypt message
 
     QProcess encryptProcess;

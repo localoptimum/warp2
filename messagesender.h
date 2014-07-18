@@ -24,7 +24,6 @@ public slots:
 
     void requestFinished(QNetworkReply *data);
 
-
 private:
     QNetworkAccessManager *netManager;
     QNetworkReply *netReply;

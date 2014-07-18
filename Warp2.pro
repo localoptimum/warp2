@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     messagesender.cpp \
     keyListEditor.cpp \
     idcreator.cpp \
-    keygenerator.cpp
+    keygenerator.cpp \
+    messagedelegate.cpp
 
 HEADERS  += mainwindow.h \
     messageeditor.h \
@@ -29,7 +30,8 @@ HEADERS  += mainwindow.h \
     keyListEditor.h \
     idcreator.h \
     keygenerator.h \
-    warp2ServerURL.h
+    warp2ServerURL.h \
+    messagedelegate.h
 
 FORMS    += mainwindow.ui \
     messageeditor.ui \

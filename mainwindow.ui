@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>636</width>
+    <width>639</width>
     <height>520</height>
    </rect>
   </property>
@@ -15,24 +15,37 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>10</number>
+    </property>
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>2</number>
+    </property>
     <item>
-     <layout class="QHBoxLayout" name="horizontalButtonLayout">
-      <item>
-       <widget class="QPushButton" name="mainContactsButton">
-        <property name="text">
-         <string>Manage Contacts</string>
-        </property>
-       </widget>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="2" column="0" colspan="2">
+       <widget class="QListWidget" name="listWidget"/>
       </item>
-      <item>
-       <widget class="QPushButton" name="mainCreateMessageButton">
-        <property name="text">
-         <string>Create Message</string>
-        </property>
-       </widget>
-      </item>
-      <item>
+      <item row="0" column="2">
        <widget class="QPushButton" name="mainGetNewMessagesButton">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Get New Messages</string>
         </property>
@@ -41,17 +54,77 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="mainContactsButton">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Manage Contacts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="replyButton">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Reply</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="mainCreateMessageButton">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Create Message</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" colspan="3">
+       <widget class="QTextEdit" name="textEdit">
+        <property name="undoRedoEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="cursorWidth">
+         <number>0</number>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+        </property>
+       </widget>
+      </item>
      </layout>
-    </item>
-    <item>
-     <widget class="QListWidget" name="listWidget">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
     </item>
    </layout>
   </widget>
@@ -60,8 +133,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>636</width>
-     <height>27</height>
+     <width>639</width>
+     <height>22</height>
     </rect>
    </property>
   </widget>

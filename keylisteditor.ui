@@ -46,16 +46,46 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="newPrivateIDButton">
+    <widget class="QPushButton" name="newPrivateIDButton">
+     <property name="minimumSize">
+      <size>
+       <width>120</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>120</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="text">
       <string>New Private ID</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="exportPublicKeyButton">
+    <widget class="QPushButton" name="exportPublicKeyButton">
+     <property name="minimumSize">
+      <size>
+       <width>355</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>355</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="text">
       <string>Save public key contact file to give to your friends...</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -71,6 +101,18 @@
       <string>Your Contacts</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
       <item>
        <widget class="QTableWidget" name="publicKeyTable">
         <property name="sizePolicy">
@@ -88,16 +130,46 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="importContactButton">
+    <widget class="QPushButton" name="importContactButton">
+     <property name="minimumSize">
+      <size>
+       <width>290</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>290</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="text">
       <string>Import a friend's public key contact file...</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="doneButton">
+    <widget class="QPushButton" name="doneButton">
+     <property name="minimumSize">
+      <size>
+       <width>60</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>60</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="text">
       <string>Done</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

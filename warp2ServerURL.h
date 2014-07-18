@@ -4,7 +4,7 @@
 #include <QString>
 
 //const QString serverURL="http://mail.gnamail.se/warp2/";
-const QString serverURL="http://www.localoptimum.com/warp2/"
+const QString serverURL="http://www.localoptimum.com/warp2/";
 //const QString serverURL="http://localhost/warp2/";
 
 

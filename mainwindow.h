@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QNetworkAccessManager>
+#include <QListWidgetItem>
 #include "messageeditor.h"
 #include "keyListEditor.h"
 
@@ -27,6 +28,10 @@ private slots:
 
     void finishedSlot(QNetworkReply* reply);
 
+    void on_listWidget_itemClicked(QListWidgetItem *item);
+
+    void on_replyButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     MessageEditor *messageEditor;
@@ -43,6 +48,8 @@ private:
     void downloadMessage(QString msgHash);
 
     void downloadAttachment(QString attachHash);
+
+    void loadMessages();//H
 
 };
 

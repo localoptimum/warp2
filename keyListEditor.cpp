@@ -7,7 +7,7 @@
 #include <QStandardPaths>
 #include <QAbstractItemView>
 #include <QMessageBox>
-
+#include <fstream>
 #include <iostream>
 
 KeyListEditor::KeyListEditor(QWidget *parent) :
@@ -141,22 +141,35 @@ void KeyListEditor::on_exportPublicKeyButton_clicked()
 
             finalFilename.append(".warp2ID.asc");
 
-            std::cout << "Saving " << idStem.toStdString() << " as " << finalFilename.toStdString() << std::endl;
+            std::ifstream file(finalFilename.toStdString().c_str());
+            if(file){
+                //if file already exists, gpg won't overwrite
+                QString info = QString("File ");
+                info.append(fileName);
+                info.append(" already exists. Please choose different name or location.");
+                QMessageBox::warning(
+                      this,
+                      "Cannot overwrite existing file",
+                      info);
+            }else{
 
-            std::cout << "Launching gpg process" << std::endl;
+               std::cout << "Saving " << idStem.toStdString() << " as " << finalFilename.toStdString() << std::endl;
 
-            // QString gpgScript = "--export --armor --output ";
-            // gpgScript.append(finalFilename);
-            // gpgScript.append(" ");
-            // gpgScript.append(idStem);
+                std::cout << "Launching gpg process" << std::endl;
 
-            gpg.start(gpgPath, QStringList() << "--export" << "--armor" << "--output" << finalFilename << idStem);
+                // QString gpgScript = "--export --armor --output ";
+                // gpgScript.append(finalFilename);
+                // gpgScript.append(" ");
+                // gpgScript.append(idStem);
 
-            gpg.setProcessChannelMode(QProcess::ForwardedChannels);
+                gpg.start(gpgPath, QStringList() << "--export" << "--armor" << "--output" << finalFilename << idStem);
 
-            std::cout << "Connecting std out" << std::endl;
-            connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
-            connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
+                gpg.setProcessChannelMode(QProcess::ForwardedChannels);
+
+                std::cout << "Connecting std out" << std::endl;
+                connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
+                connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
+            }
         }
 
     }
@@ -171,7 +184,7 @@ void KeyListEditor::on_doneButton_clicked()
 void KeyListEditor::on_newPrivateIDButton_clicked()
 {
     IDCreator *idc = new IDCreator(this);
-    connect(idc, SIGNAL(updateKeys()), this, SLOT(updateKeys())); //Hanna
+    connect(idc, SIGNAL(updateKeys()), this, SLOT(updateKeys()));
     idc->show();
 }
 
@@ -182,21 +195,23 @@ void KeyListEditor::on_importContactButton_clicked()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Load File"),
                                 startpath,
                                 tr("*.warp2ID.asc"));
+    //If fileName is empty, user cancelled import
+    if(!fileName.isEmpty()){
+        std::cout << "Importing contact " << fileName.toStdString() << std::endl;
 
-    std::cout << "Importing contact " << fileName.toStdString() << std::endl;
+         // QString gpgScript = "gpg2 --import ";
+        // gpgScript.append(fileName);
 
-   // QString gpgScript = "gpg2 --import ";
-   // gpgScript.append(fileName);
+         gpg.start(gpgPath, QStringList() << "--import" << fileName);
 
-    gpg.start(gpgPath, QStringList() << "--import" << fileName);
+         gpg.setProcessChannelMode(QProcess::ForwardedChannels);
 
-    gpg.setProcessChannelMode(QProcess::ForwardedChannels);
+         std::cout << "Connecting std out" << std::endl;
+        connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
+        connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
 
-    std::cout << "Connecting std out" << std::endl;
-    connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
-    connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
-
-    updateKeys(); //update keys in view
+        updateKeys(); //update keys in view
+    }
 }
 
 

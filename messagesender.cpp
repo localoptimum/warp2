@@ -93,11 +93,9 @@ void messageSender::uploadItem(QString itemName)
 
     connect(netManager, SIGNAL(finished(QNetworkReply*)), SLOT(requestFinished(QNetworkReply*)));
 
-
     QEventLoop loop;
 
     QObject::connect(netReply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-
     // Execute the event loop here, now we will wait here until readyRead() signal is emitted
     // which in turn will trigger event loop quit.
     loop.exec();
