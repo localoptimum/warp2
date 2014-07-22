@@ -280,7 +280,8 @@ void MessageEditor::assembleHeader(void)
     QString gpgProcess = gpgPath;
     gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(headerTempName);
 
-    QString headerTempNameAsc = headerTempName.append(".asc");
+    QString headerTempNameAsc = headerTempName;
+    headerTempNameAsc.append(".asc");
 
     std::cout << gpgProcess.toStdString() << std::endl;
 
@@ -440,7 +441,8 @@ void MessageEditor::assembleMessage(void)
     QString gpgProcess = gpgPath;
     gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(messageTempName);
 
-    QString messageTempNameAsc = messageTempName.append(".asc");
+    QString messageTempNameAsc = messageTempName;
+    messageTempNameAsc.append(".asc");
 
     std::cout << gpgProcess.toStdString() << std::endl;
 
@@ -578,7 +580,20 @@ void MessageEditor::assembleAttachment(void)
     */
 
     //encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
-    encryptProcess.start(gpgPath, QStringList() << "-c" << "-r" << ui->addresseePullDown->currentText() << "--yes" << "-a" << "-e" << attachmentFileName);
+    //encryptProcess.start(gpgPath, QStringList() << "-c" << "-r" << ui->addresseePullDown->currentText() << "--yes" << "-a" << "-e" << attachmentFileName);
+
+
+    QString gpgProcess = gpgPath;
+    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(attachmentFileName);
+
+    QString attachmentFileNameAsc = attachmentFileName;
+    attachmentFileNameAsc.append(".asc");
+
+    std::cout << gpgProcess.toStdString() << std::endl;
+
+    encryptProcess.start(gpgProcess);
+
+
 
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -597,7 +612,7 @@ void MessageEditor::assembleAttachment(void)
     }
 
     //GEt here, encryption worked
-    attachmentFileName = attachmentFileName.append(".asc");
+
 
 //    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
 //    std::cout << "Encrypt Error:" << std::endl << encryptError.toStdString() << std::endl;
@@ -609,7 +624,7 @@ void MessageEditor::assembleAttachment(void)
     QProcess sha1process;
 
     //sha1process.start("sha1sum", QStringList() << attachmentFileName);
-    sha1process.start(shaPath, QStringList() << attachmentFileName);
+    sha1process.start(shaPath, QStringList() << attachmentFileNameAsc);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -637,7 +652,7 @@ void MessageEditor::assembleAttachment(void)
     QProcess fileRenameProcess;
     QString attachmentSha1Filename = QString("/tmp/").append(attachmentSha1).append(".warp2.attachment");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
-    renamePipe.append(attachmentFileName);
+    renamePipe.append(attachmentFileNameAsc);
     renamePipe.append(" ");
     renamePipe.append(attachmentSha1Filename);
 
