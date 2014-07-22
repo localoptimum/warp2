@@ -177,6 +177,10 @@ void messageSender::updateInbox(QString headerFileName, QString messageFileName,
         urlBuild.append("none");
     }
 
+    std::cout << "Sending rebuild inbox message:" << std::endl;
+
+    std::cout << urlBuild.toStdString() << std::endl;
+
     QNetworkRequest request(urlBuild);
 
     QNetworkAccessManager manager;
