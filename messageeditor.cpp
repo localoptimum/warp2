@@ -38,7 +38,7 @@ MessageEditor::MessageEditor(QWidget *parent) :
     //find sha/sha1 path
     shaPath = QStandardPaths::findExecutable("sha1sum", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/");
     if(shaPath.isEmpty()){
-        //std::cout << "sha1 not found" << std::endl;
+        //On apple systems sha1sum is called "shasum" instead, try that:
         shaPath = QStandardPaths::findExecutable("shasum", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/");
     }
     if(shaPath.isEmpty()){
@@ -270,7 +270,28 @@ void MessageEditor::assembleHeader(void)
 //    std::cout << encryptPipe.toStdString() << std::endl;
 
    // encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
-    encryptProcess.start(gpgPath, QStringList() << "-c" << "-a" << "-r" << ui->addresseePullDown->currentText() << "-e" << headerTempName);
+
+    // This is the problem.  "-c" was to tell bash to start "gpg".  Here we are telling gpg to use a symmetric cypher, then proceeding to give
+    // info as though doing an RSA encryption.  No idea what would happen there.  Removing the "-c" option from the beginning and testing.
+
+    std::cout << "gpgPath is "<< gpgPath.toStdString() << std::endl;
+
+
+    QString gpgProcess = gpgPath;
+    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(headerTempName);
+
+    QString headerTempNameAsc = headerTempName.append(".asc");
+
+    std::cout << gpgProcess.toStdString() << std::endl;
+
+    encryptProcess.start(gpgProcess);
+
+    //encryptProcess.start(gpgPath, QStringList()  << "-a -r " << ui->addresseePullDown->currentText() << " -e " << headerTempName);
+
+    //This is how it should be done - something like this:
+    //encryptProcess.start("/bin/bash", QStringList() << "-c " << gpgPath << " -a -r " << ui->addresseePullDown->currentText() << " -e " << headerTempName);
+
+    //Otherwise it hangs because there is no tty for the gpg process, whereas bash gives tty (stdin, stdout)
 
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -280,7 +301,7 @@ void MessageEditor::assembleHeader(void)
     encryptProcess.closeWriteChannel();
     encryptProcess.waitForFinished();
 
-//    encryptOutput = encryptProcess.readAllStandardOutput();
+    encryptOutput = encryptProcess.readAllStandardOutput();
     encryptError = encryptProcess.readAllStandardError();
 
 
@@ -292,7 +313,9 @@ void MessageEditor::assembleHeader(void)
               encryptError);
     }
 
-//    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
+
+
+    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
 //    std::cout << "Encrypt Error:" << std::endl << encryptError.toStdString() << std::endl;
 
     encryptProcess.close();
@@ -302,7 +325,7 @@ void MessageEditor::assembleHeader(void)
     QProcess sha1process;
 
     //sha1process.start("sha1sum", QStringList() << headerTempName);
-    sha1process.start(shaPath, QStringList() << headerTempName);
+    sha1process.start(shaPath, QStringList() << headerTempNameAsc);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -321,7 +344,7 @@ void MessageEditor::assembleHeader(void)
 
     headerSha1 = headerSha1.left(40);
 
-//    std::cout << "sha1 Output:" << std::endl << headerSha1.toStdString() << std::endl;
+    std::cout << "sha1 Output:" << std::endl << headerSha1.toStdString() << std::endl;
 //    std::cout << "sha1 Error:" << std::endl << sha1err.toStdString() << std::endl;
 
     sha1process.close();
@@ -329,7 +352,7 @@ void MessageEditor::assembleHeader(void)
     QProcess fileRenameProcess;
     QString headerSha1Filename = QString("/tmp/").append(headerSha1).append(".warp2.header");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
-    renamePipe.append(headerTempName);
+    renamePipe.append(headerTempNameAsc);
     renamePipe.append(" ");
     renamePipe.append(headerSha1Filename);
 
@@ -412,7 +435,21 @@ void MessageEditor::assembleMessage(void)
 //    std::cout << encryptPipe.toStdString() << std::endl;
 
     //encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
-    encryptProcess.start(gpgPath, QStringList() << "-c" << "-a" << "-r" << ui->addresseePullDown->currentText() << "-e" << messageTempName);
+
+
+    QString gpgProcess = gpgPath;
+    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(messageTempName);
+
+    QString messageTempNameAsc = messageTempName.append(".asc");
+
+    std::cout << gpgProcess.toStdString() << std::endl;
+
+    encryptProcess.start(gpgProcess);
+
+
+    //encryptProcess.start(gpgPath, QStringList() << "-c" << "-a" << "-r" << ui->addresseePullDown->currentText() << "-e" << messageTempName);
+
+
 
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -444,7 +481,7 @@ void MessageEditor::assembleMessage(void)
     QProcess sha1process;
 
     //sha1process.start("sha1sum", QStringList() << messageTempName);
-    sha1process.start(shaPath, QStringList() << messageTempName);
+    sha1process.start(shaPath, QStringList() << messageTempNameAsc);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -472,7 +509,7 @@ void MessageEditor::assembleMessage(void)
     QProcess fileRenameProcess;
     QString messageSha1Filename = QString("/tmp/").append(messageSha1).append(".warp2.message");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
-    renamePipe.append(messageTempName);
+    renamePipe.append(messageTempNameAsc);
     renamePipe.append(" ");
     renamePipe.append(messageSha1Filename);
 
