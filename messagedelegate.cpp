@@ -1,4 +1,4 @@
-#include "MessageDelegate.h"
+#include "messagedelegate.h"
 
     messagedelegate::messagedelegate(QObject *parent)
     {

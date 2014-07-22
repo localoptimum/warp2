@@ -5,6 +5,7 @@
 #include "sendprogressdialog.h"
 
 #include <QFileDialog>
+#include <QStandardPaths>
 #include <QProcess>
 #include <QDateTime>
 #include <QMessageBox>
@@ -12,8 +13,9 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QTemporaryFile>
+
+
 #include <iostream>
-#include <QStandardPaths>
 
 MessageEditor::MessageEditor(QWidget *parent) :
     QDialog(parent),
