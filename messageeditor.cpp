@@ -277,8 +277,23 @@ void MessageEditor::assembleHeader(void)
     std::cout << "gpgPath is "<< gpgPath.toStdString() << std::endl;
 
 
+#if defined Q_OS_MAC
+    // Can run gpg directly, system provides stdin and stdout
     QString gpgProcess = gpgPath;
     gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(headerTempName);
+
+#elif defined Q_OS_WIN32
+    //windows specific code for launching gpg via cmd
+
+
+#else
+    //assume linux or similar tty & x11 system - this needs to run via /bin/bash to get access to stdin and stdout
+
+    QString gpgProcess = "/bin/bash -c ";
+    gpgProcess.append(gpgPath);
+    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(headerTempName);
+#endif
+
 
     QString headerTempNameAsc = headerTempName;
     headerTempNameAsc.append(".asc");
@@ -437,9 +452,22 @@ void MessageEditor::assembleMessage(void)
 
     //encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
 
+#if defined Q_OS_MAC
+    // Can run gpg directly, system provides stdin and stdout
 
     QString gpgProcess = gpgPath;
     gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(messageTempName);
+
+#elif defined Q_OS_WIN32
+    //windows specific code for launching gpg via cmd
+
+
+#else
+    //assume linux or similar tty & x11 system - this needs to run via /bin/bash to get access to stdin and stdout
+    QString gpgProcess = "/bin/bash -c ";
+    gpgProcess.append(gpgPath);
+    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(messageTempName);
+#endif
 
     QString messageTempNameAsc = messageTempName;
     messageTempNameAsc.append(".asc");
@@ -583,8 +611,23 @@ void MessageEditor::assembleAttachment(void)
     //encryptProcess.start(gpgPath, QStringList() << "-c" << "-r" << ui->addresseePullDown->currentText() << "--yes" << "-a" << "-e" << attachmentFileName);
 
 
+#if defined Q_OS_MAC
+    // Can run gpg directly, system provides stdin and stdout
+
     QString gpgProcess = gpgPath;
     gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(attachmentFileName);
+
+#elif defined Q_OS_WIN32
+    //windows specific code for launching gpg via cmd
+
+
+#else
+    //assume linux or similar tty & x11 system - this needs to run via /bin/bash to get access to stdin and stdout
+    QString gpgProcess = "/bin/bash -c ";
+    gpgProcess.append(gpgPath);
+    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(attachmentFileName);
+#endif
+
 
     QString attachmentFileNameAsc = attachmentFileName;
     attachmentFileNameAsc.append(".asc");
