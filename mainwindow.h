@@ -6,6 +6,7 @@
 #include <QListWidgetItem>
 #include "messageeditor.h"
 #include "keyListEditor.h"
+#include "message.h" //TESTING
 
 namespace Ui {
 class MainWindow;
@@ -39,7 +40,9 @@ private:
     QNetworkAccessManager* netmanager;
 
     QStringList newMsgHashes;
+    QString gpgPath;
 
+    QList<message> messages;//TESTING
 
     void downloadHeader(QString headerHash);
 
@@ -49,7 +52,7 @@ private:
 
     void downloadAttachment(QString attachHash);
 
-    void loadMessages();//H
+    void loadMessages();
 
 };
 

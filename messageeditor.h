@@ -43,8 +43,8 @@ private:
 
     QString myEmailAddress;
 
-    QString gpgPath; //H
-    QString shaPath; //H
+    QString gpgPath;
+    QString shaPath;
 
     void assembleHeader();
     void assembleMessage();

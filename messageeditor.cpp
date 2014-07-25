@@ -244,7 +244,7 @@ void MessageEditor::assembleHeader(void)
 
     headerTemp.open();
     headerTemp.setAutoRemove(false);  // we will manually remove the temp files after send process is finished
-
+    headerTemp.write(msgHeader.toLocal8Bit()); // write messageheader to tempFile for encryption
     QString headerTempName = headerTemp.fileName();
 
     headerTemp.close();
@@ -308,13 +308,13 @@ void MessageEditor::assembleHeader(void)
     //encryptProcess.start("/bin/bash", QStringList() << "-c " << gpgPath << " -a -r " << ui->addresseePullDown->currentText() << " -e " << headerTempName);
 
     //Otherwise it hangs because there is no tty for the gpg process, whereas bash gives tty (stdin, stdout)
-
+/* This bit isn't working
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
     encryptProcess.write(msgHeader.toLocal8Bit()); // then wait for bytes written before reading
 
     encryptProcess.waitForBytesWritten();
-    encryptProcess.closeWriteChannel();
+    encryptProcess.closeWriteChannel();*/
     encryptProcess.waitForFinished();
 
     encryptOutput = encryptProcess.readAllStandardOutput();
@@ -428,7 +428,7 @@ void MessageEditor::assembleMessage(void)
 
     messageTemp.open();
     messageTemp.setAutoRemove(false);  // we will manually remove the temp files after send process is finished
-
+    messageTemp.write(messageBodyText.toLocal8Bit()); // write message to temp file
     QString messageTempName = messageTemp.fileName();
 
     messageTemp.close();
@@ -480,13 +480,13 @@ void MessageEditor::assembleMessage(void)
     //encryptProcess.start(gpgPath, QStringList() << "-c" << "-a" << "-r" << ui->addresseePullDown->currentText() << "-e" << messageTempName);
 
 
-
+/* This bit itsn't working
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
 
     encryptProcess.write(messageBodyText.toLocal8Bit()); // then wait for bytes written before reading
 
     encryptProcess.waitForBytesWritten();
-    encryptProcess.closeWriteChannel();
+    encryptProcess.closeWriteChannel();*/
     encryptProcess.waitForFinished();
 
 //    encryptOutput = encryptProcess.readAllStandardOutput();
