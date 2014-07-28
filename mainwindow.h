@@ -20,6 +20,18 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    QString getHeaderHash(void);
+    QString getMessageHash(void);
+    QString getAttachHash(void);
+    QString getTimeStamp(void);
+    QString getClearTextHash(void);
+
+    void setHeaderHash(QString hash);
+    void setMessageHash(QString hash);
+    void setAttachHash(QString hash);
+    void setTimeStamp(QString hash);
+    void setClearTextHash(QString hash);
+
 private slots:
     void on_mainCreateMessageButton_clicked();
 
@@ -44,11 +56,27 @@ private:
     QStringList newMsgHashes;
     QString gpgPath;
 
+    QString rootPath;
+
+    QString headerHash;
+    QString messageHash;
+    QString attachHash;
+    QString timestamp;
+    QString userPassword;
+    QString clearTextHash;
+
+
+
     QList<message> messages;//TESTING
 
     void downloadHeader(QString headerHash);
 
-    void decryptHeader(QString headerHash);
+    QString decryptHeader(QString headerHash);
+    QString decryptMessage(QString messageHash);
+
+
+    void addMessageToInbox(QString from, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink);
+
 
     void downloadMessage(QString msgHash);
 
