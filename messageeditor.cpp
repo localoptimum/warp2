@@ -253,9 +253,9 @@ void MessageEditor::assembleHeader(void)
 
     //Encrypt header
 
-    QProcess encryptProcess;
-    QString encryptOutput;
-    QString encryptError;
+//    QProcess encryptProcess;
+//    QString encryptOutput;
+//    QString encryptError;
 
 //    QString encryptPipe = "gpg -a -e -u ";
 //    encryptPipe.append(ui->fromPullDown->currentText());
@@ -278,46 +278,43 @@ void MessageEditor::assembleHeader(void)
 
 
 #if defined Q_OS_MAC
-    // Can run gpg directly, system provides stdin and stdout
+    // Can run gpg directly(?), system provides stdin and stdout
     QString gpgProcess = gpgPath;
     gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(headerTempName);
 
 #elif defined Q_OS_WIN32
-    //windows specific code for launching gpg via cmd
+    //windows specific code for launching gpg via cmd.exe
 
 
 #else
     //assume linux or similar tty & x11 system - this needs to run via /bin/bash to get access to stdin and stdout
 
-    QString gpgProcess = "/bin/bash -c ";
-    gpgProcess.append(gpgPath);
-    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(headerTempName);
-#endif
+    //Encrypt header
 
+    QProcess encryptProcess;
+    QString encryptOutput;
+    QString encryptError;
 
-    QString headerTempNameAsc = headerTempName;
-    headerTempNameAsc.append(".asc");
+    QString encryptPipe = "gpg -a -e -r ";
+    encryptPipe.append(ui->addresseePullDown->currentText());
+    encryptPipe.append(" -o ");
+    encryptPipe.append(headerTempName);
 
-    std::cout << gpgProcess.toStdString() << std::endl;
+    std::cout << encryptPipe.toStdString() << std::endl;
 
-    encryptProcess.start(gpgProcess);
-
-    //encryptProcess.start(gpgPath, QStringList()  << "-a -r " << ui->addresseePullDown->currentText() << " -e " << headerTempName);
-
-    //This is how it should be done - something like this:
-    //encryptProcess.start("/bin/bash", QStringList() << "-c " << gpgPath << " -a -r " << ui->addresseePullDown->currentText() << " -e " << headerTempName);
-
-    //Otherwise it hangs because there is no tty for the gpg process, whereas bash gives tty (stdin, stdout)
-/* This bit isn't working
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+
+
+    encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+
 
     encryptProcess.write(msgHeader.toLocal8Bit()); // then wait for bytes written before reading
 
     encryptProcess.waitForBytesWritten();
-    encryptProcess.closeWriteChannel();*/
+    encryptProcess.closeWriteChannel();
     encryptProcess.waitForFinished();
 
-    encryptOutput = encryptProcess.readAllStandardOutput();
+//    encryptOutput = encryptProcess.readAllStandardOutput();
     encryptError = encryptProcess.readAllStandardError();
 
 
@@ -329,19 +326,25 @@ void MessageEditor::assembleHeader(void)
               encryptError);
     }
 
-
-
-    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
+//    std::cout << "Encrypt Output:" << std::endl << encryptOutput.toStdString() << std::endl;
 //    std::cout << "Encrypt Error:" << std::endl << encryptError.toStdString() << std::endl;
 
     encryptProcess.close();
+
+
+
+#endif
+
+
+
+
 
     //Sha1 header
 
     QProcess sha1process;
 
     //sha1process.start("sha1sum", QStringList() << headerTempName);
-    sha1process.start(shaPath, QStringList() << headerTempNameAsc);
+    sha1process.start(shaPath, QStringList() << headerTempName);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -368,7 +371,7 @@ void MessageEditor::assembleHeader(void)
     QProcess fileRenameProcess;
     QString headerSha1Filename = QString("/tmp/").append(headerSha1).append(".warp2.header");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
-    renamePipe.append(headerTempNameAsc);
+    renamePipe.append(headerTempName);
     renamePipe.append(" ");
     renamePipe.append(headerSha1Filename);
 
@@ -439,18 +442,6 @@ void MessageEditor::assembleMessage(void)
     QString encryptOutput;
     QString encryptError;
 
-//    QString encryptPipe = "gpg -e -u ";
-//    encryptPipe.append(ui->fromPullDown->currentText());
-
-    /*** Replaced by encryptProcess.start(gpgPath,...)
-    QString encryptPipe = "gpg -a -e -r ";
-    encryptPipe.append(ui->addresseePullDown->currentText());
-    encryptPipe.append(" >> ");
-    encryptPipe.append(messageTempName);
-    */
-//    std::cout << encryptPipe.toStdString() << std::endl;
-
-    //encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
 
 #if defined Q_OS_MAC
     // Can run gpg directly, system provides stdin and stdout
@@ -464,32 +455,38 @@ void MessageEditor::assembleMessage(void)
 
 #else
     //assume linux or similar tty & x11 system - this needs to run via /bin/bash to get access to stdin and stdout
-    QString gpgProcess = "/bin/bash -c ";
-    gpgProcess.append(gpgPath);
-    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(messageTempName);
-#endif
-
-    QString messageTempNameAsc = messageTempName;
-    messageTempNameAsc.append(".asc");
-
-    std::cout << gpgProcess.toStdString() << std::endl;
-
-    encryptProcess.start(gpgProcess);
+//    QString gpgProcess = "/bin/bash -c ";
+//    gpgProcess.append(gpgPath);
+//    gpgProcess.append(" -a -r ").append(ui->addresseePullDown->currentText()).append(" -e ").append(messageTempName);
 
 
-    //encryptProcess.start(gpgPath, QStringList() << "-c" << "-a" << "-r" << ui->addresseePullDown->currentText() << "-e" << messageTempName);
+    QString encryptPipe = "gpg -a -e -r ";
+    encryptPipe.append(ui->addresseePullDown->currentText());
+    encryptPipe.append(" -o ");
+    encryptPipe.append(messageTempName);
 
-
-/* This bit itsn't working
     encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    encryptProcess.start("/bin/bash", QStringList() << "-c" << encryptPipe);
+
+//    encryptProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+//    encryptProcess.start("gpg", QStringList()
+//                         << "-a"
+//                         << "-e"
+//                         << "-r"
+//                         << ui->addresseePullDown->currentText()
+//                         << "-o"
+//                         << messageTempName);
+
+    encryptProcess.waitForStarted();
 
     encryptProcess.write(messageBodyText.toLocal8Bit()); // then wait for bytes written before reading
 
     encryptProcess.waitForBytesWritten();
-    encryptProcess.closeWriteChannel();*/
+    encryptProcess.closeWriteChannel();
     encryptProcess.waitForFinished();
 
-//    encryptOutput = encryptProcess.readAllStandardOutput();
+    encryptOutput = encryptProcess.readAllStandardOutput();
     encryptError = encryptProcess.readAllStandardError();
 
 
@@ -506,12 +503,16 @@ void MessageEditor::assembleMessage(void)
 
     encryptProcess.close();
 
+#endif
+
+
+
     //Sha1 hash the message
 
     QProcess sha1process;
 
     //sha1process.start("sha1sum", QStringList() << messageTempName);
-    sha1process.start(shaPath, QStringList() << messageTempNameAsc);
+    sha1process.start(shaPath, QStringList() << messageTempName);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -539,7 +540,7 @@ void MessageEditor::assembleMessage(void)
     QProcess fileRenameProcess;
     QString messageSha1Filename = QString("/tmp/").append(messageSha1).append(".warp2.message");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
-    renamePipe.append(messageTempNameAsc);
+    renamePipe.append(messageTempName);
     renamePipe.append(" ");
     renamePipe.append(messageSha1Filename);
 
