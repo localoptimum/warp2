@@ -12,8 +12,20 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+
     messageEditor = new MessageEditor(this);
     keyListEditor = new KeyListEditor(this);
+
+
+    //Initialise globals
+    headerHash="";
+    messageHash="";
+    attachHash="";
+    timestamp="";
+    userPassword="";
+
+
 
     //find gpg2/gpg path
     gpgPath = QStandardPaths::findExecutable("gpg2", QStringList() << "/usr/local/bin/" << "/usr/bin/" << "/bin/" << "/usr/local/MacGPG2/bin/"); //H
@@ -34,6 +46,85 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+
+
+
+
+
+
+
+
+
+QString MainWindow::getHeaderHash(void)
+{
+    return(headerHash);
+}
+
+QString MainWindow::getMessageHash(void)
+{
+    return(messageHash);
+}
+
+QString MainWindow::getAttachHash(void)
+{
+    return(attachHash);
+}
+
+QString MainWindow::getTimeStamp(void)
+{
+    return(timestamp);
+}
+
+QString MainWindow::getClearTextHash(void)
+{
+    return(clearTextHash);
+}
+
+
+
+void MainWindow::setHeaderHash(QString hash)
+{
+    headerHash = hash;
+}
+
+void MainWindow::setMessageHash(QString hash)
+{
+    messageHash = hash;
+}
+
+void MainWindow::setAttachHash(QString hash)
+{
+    attachHash = hash;
+}
+
+void MainWindow::setTimeStamp(QString stp)
+{
+    timestamp = stp;
+}
+
+void MainWindow::setClearTextHash(QString hash)
+{
+    clearTextHash = hash;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void MainWindow::on_mainCreateMessageButton_clicked()
 {
@@ -138,6 +229,9 @@ void MainWindow::decryptHeader(QString headerHash)
     }
 }
 
+
+
+
 void MainWindow::finishedSlot(QNetworkReply* reply)
 {
     QString * serverReply;
@@ -186,6 +280,13 @@ void MainWindow::finishedSlot(QNetworkReply* reply)
     // and therefore need to handle deletion.
     reply->deleteLater();
 }
+
+
+
+
+
+
+
 
 void MainWindow::loadMessages(){
     //Create a QListWidgetItem for each message, and set appropriate data

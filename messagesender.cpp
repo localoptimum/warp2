@@ -18,6 +18,18 @@ messageSender::messageSender(QObject *parent) :
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 void messageSender::uploadMessage(QString headerFileName, QString messageFileName, QString attachmentFileName)
 {
     uploadItem(headerFileName);
@@ -44,6 +56,11 @@ void messageSender::uploadMessage(QString headerFileName, QString messageFileNam
     updateInbox(headerFileName, messageFileName, attachmentFileName);
     setTotalSendProgress(100,100);
 }
+
+
+
+
+
 
 void messageSender::uploadItem(QString itemName)
 {

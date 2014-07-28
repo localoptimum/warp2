@@ -20,6 +20,18 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    QString getHeaderHash(void);
+    QString getMessageHash(void);
+    QString getAttachHash(void);
+    QString getTimeStamp(void);
+    QString getClearTextHash(void);
+
+    void setHeaderHash(QString hash);
+    void setMessageHash(QString hash);
+    void setAttachHash(QString hash);
+    void setTimeStamp(QString hash);
+    void setClearTextHash(QString hash);
+
 private slots:
     void on_mainCreateMessageButton_clicked();
 
@@ -41,6 +53,15 @@ private:
 
     QStringList newMsgHashes;
     QString gpgPath;
+
+    QString headerHash;
+    QString messageHash;
+    QString attachHash;
+    QString timestamp;
+    QString userPassword;
+    QString clearTextHash;
+
+
 
     QList<message> messages;//TESTING
 
