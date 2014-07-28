@@ -54,6 +54,8 @@ private:
     QStringList newMsgHashes;
     QString gpgPath;
 
+    QString rootPath;
+
     QString headerHash;
     QString messageHash;
     QString attachHash;
@@ -67,7 +69,12 @@ private:
 
     void downloadHeader(QString headerHash);
 
-    void decryptHeader(QString headerHash);
+    QString decryptHeader(QString headerHash);
+    QString decryptMessage(QString messageHash);
+
+
+    void addMessageToInbox(QString from, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink);
+
 
     void downloadMessage(QString msgHash);
 

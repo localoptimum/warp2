@@ -251,6 +251,7 @@ void MessageEditor::assembleHeader(void)
     msgHeader.append(ui->addresseePullDown->currentText());
     msgHeader.append(";");
 
+    msgHeader.append("Date:");
     QDateTime rightnow(QDateTime::currentDateTime());
     msgHeader.append(rightnow.toString());
     msgHeader.append(";");

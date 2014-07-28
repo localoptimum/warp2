@@ -5,6 +5,7 @@
 #include "ui_messageeditor.h"
 #include "messagedelegate.h"
 #include <QStandardPaths>
+#include <QDir>
 #include "message.h" //TESTING
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -36,6 +37,9 @@ MainWindow::MainWindow(QWidget *parent) :
     if(gpgPath.isEmpty()){
         std::cerr << "gpg not found" << std::endl;
     }
+
+    rootPath = QDir::homePath();
+    rootPath.append("/.warp2/");
 
     ui->listWidget->setItemDelegate(new messagedelegate(ui->listWidget));
     ui->replyButton->setEnabled(false); //replybutton not clickable until message is selected
@@ -152,26 +156,14 @@ void MainWindow::on_mainContactsButton_clicked()
 
 void MainWindow::on_mainGetNewMessagesButton_clicked()
 {
-
-    //Need to make an inbox reader class
-    //Need to make a class to download messages, headers and attachments - toggle http and dht within the class
-
     //Get list of message headers from server since last timestamp
 
-    netmanager = new QNetworkAccessManager(this);
-    QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
-             this, SLOT(finishedSlot(QNetworkReply*)));
+//    netmanager = new QNetworkAccessManager(this);
+//    QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
+//             this, SLOT(finishedSlot(QNetworkReply*)));
 
-    QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
-    QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
-    // NOTE: Store QNetworkReply pointer (maybe into caller).
-    // When this HTTP request is finished you will receive this same
-    // QNetworkReply as response parameter.
-    // By the QNetworkReply pointer you can identify request and response.
-
-
-
-
+//    QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
+//    QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
 
 
 
@@ -179,23 +171,104 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
         //Add the message and attachment as necessary and store them locally.
         //Add a reference to them to the list of messages in the main display
 
+    //Test newMsgHashes
+
+    newMsgHashes = QStringList()
+            << "39a8667f4f7b02bdf7607353bb1736de1b186ad9.warp2.header";
+
+    QString decryptOutput;
+
+    foreach(QString hdr, newMsgHashes)
+    {
+        decryptOutput = decryptHeader(QString(rootPath).append(hdr));
+
+        if(decryptOutput != "")
+        {
+            //create new message and put in messages list
+            std::cout << "output: " << decryptOutput.toStdString() <<  std::endl;
+            QStringList headerContent = decryptOutput.split(QRegExp(";"));
+
+            QString from = headerContent.filter("From:").takeAt(0).remove(0,5);
+            std::cout << "From: " << from.toStdString() <<  std::endl;
+
+            QString date = headerContent.filter("Date:").takeAt(0).remove(0,5);
+            std::cout << "Date: " << date.toStdString() <<  std::endl;
+
+            QString subject = headerContent.filter("Subject:").takeAt(0).remove(0,8);
+            std::cout << "Subject: " << subject.toStdString() <<  std::endl;
+
+            QString messageHash = headerContent.filter("MessageHash:").takeAt(0).remove(0,12);
+            std::cout << "Message hash: " << messageHash.toStdString() << std::endl;
+
+            QString attachmentHash = headerContent.filter("AttachmentHash:").takeAt(0).remove(0,15);
+            std::cout << "Attachment Hash: " << attachmentHash.toStdString() << std::endl;
+
+            // put string "Date:" before the date, so filter("Date:") is possible?
 
 
+            //If we get here, this is great.  Decrypt the message, put a file:// link to the attachment, save as...
+
+            QString messageHashLink = rootPath;
+            messageHashLink.append(messageHash);
+            messageHashLink.append(".warp2.message");
+
+            std::cout << messageHashLink.toStdString() << std::endl;
+
+            QString message = decryptMessage(messageHashLink);
+
+            std::cout << "Message:" << std::endl << message.toStdString() << std::endl;
+
+            QStringList messageLines = message.split("\n");
+            QString firstLine = messageLines[0];
+
+            if(firstLine.length()>20)
+            {
+                firstLine.truncate(20);
+                firstLine.append("...");
+            }
+
+            if(message != "")
+            {
+                QString messageLink = messageHashLink;
+                messageLink.append(".txt");
+                addMessageToInbox(from, subject, date, firstLine, messageLink, attachmentHash);
+            }
+        }
+    }
+
+    //Refresh inbox
+    loadMessages();
 }
 
 
 void MainWindow::downloadHeader(QString headerHash)
-{}
+{
 
-void MainWindow::decryptHeader(QString headerHash)
+}
+
+
+
+QString MainWindow::decryptHeader(QString headerHash)
 {
     QProcess decryptProcess;
     QString decryptOutput;
     QString decryptError;
     QString gpgProcess = gpgPath;
     //ifdef linux..
-    gpgProcess.append(" --batch -d ").append(headerHash);
-    decryptProcess.start(gpgProcess);
+
+    QFile headerHashFile(headerHash);
+
+    if(!headerHashFile.exists())
+    {
+        std::cerr << "File not found " << headerHash.toStdString() << std::endl;
+        return("");
+    }
+
+    decryptProcess.start(gpgPath,
+                         QStringList() << "--batch"
+                         << "-d"
+                         << headerHash);
+
     decryptProcess.waitForFinished();
 
     decryptOutput = decryptProcess.readAllStandardOutput();
@@ -203,30 +276,89 @@ void MainWindow::decryptHeader(QString headerHash)
 
     decryptProcess.close();
 
-    std::cout << "error: " << decryptError.toStdString() << std::endl;
-    if(decryptError.contains("no secret key", Qt::CaseInsensitive)){
+    std::cerr << "error: " << decryptError.toStdString() << std::endl;
+
+    if(decryptError.contains("no secret key", Qt::CaseInsensitive))
+    {
         std::cout << "No secret key, mail not for you" << std::endl;
-    }else{
-        //create new message and put in messages list
-        std::cout << "output: " << decryptOutput.toStdString() <<  std::endl;
-        QStringList headerContent = decryptOutput.split(QRegExp(";"));
-        QString from = headerContent.filter("From:").takeAt(0).remove(0,5);
-        QString subject = headerContent.filter("Subject:").takeAt(0).remove(0,8);
-        QString messageHash = headerContent.filter("Message:").takeAt(0).remove(0,8);
-        QString attachmentHash = headerContent.filter("Attachment:").takeAt(0).remove(0,11);
-        // put string "Date:" before the date, so filter("Date:") is possible?
-
-        std::cout << "From: " << from.toStdString() <<  std::endl;
-        std::cout << "Subject: " << subject.toStdString() <<  std::endl;
-        std::cout << "Message hash: " << messageHash.toStdString() << std::endl;
-        std::cout << "Attachment hash: " << attachmentHash.toStdString() << std::endl;
-
-        //download and decrypt message and attachment
-        QString messageLink = QString("/Users/hannabjorgvinsdottir/Desktop/mail.txt"); //decryptMessage(messageHash);
-        QString attachmentLink = QString("/Users/hannabjorgvinsdottir/Desktop/skickamig.txt"); //decryptAttachment(attachmentHash);
-        message mess = message(from, subject, QString("08-02-14"), messageLink, attachmentLink); //testing
-        this->messages.append(mess);
+        return("");
     }
+    else
+    {
+        return(decryptOutput);
+    }
+}
+
+
+
+
+
+QString MainWindow::decryptMessage(QString messageHash)
+{
+    QProcess decryptProcess;
+    QString decryptOutput;
+    QString decryptError;
+    QString gpgProcess = gpgPath;
+    //ifdef linux..
+
+    QFile messageHashFile(messageHash);
+
+    if(!messageHashFile.exists())
+    {
+        std::cerr << "File not found " << messageHash.toStdString() << std::endl;
+        return("");
+    }
+
+    QString clearFileName = messageHash;
+    clearFileName.append(".txt");
+
+    decryptProcess.start(gpgPath,
+                         QStringList() << "--batch"
+                         << "-d"
+                         << messageHash
+                         );
+
+    decryptProcess.waitForFinished();
+
+    decryptOutput = decryptProcess.readAllStandardOutput();
+    decryptError = decryptProcess.readAllStandardError();
+
+    decryptProcess.close();
+
+    std::cerr << "error: " << decryptError.toStdString() << std::endl;
+
+    if(decryptError.contains("no secret key", Qt::CaseInsensitive))
+    {
+        std::cout << "No secret key, mail not for you" << std::endl;
+        return("");
+    }
+    else
+    {
+        QFile clearFile(clearFileName);
+        clearFile.open(QIODevice::WriteOnly | QIODevice::Text);
+        clearFile.write(decryptOutput.toLocal8Bit());
+
+        clearFile.close();
+
+        return(decryptOutput);
+    }
+}
+
+
+
+
+
+
+void MainWindow::addMessageToInbox(QString from, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink)
+{
+        //download and decrypt message and attachment
+//        QString messageLink = QString("/Users/hannabjorgvinsdottir/Desktop/mail.txt"); //decryptMessage(messageHash);
+//        QString attachmentLink = QString("/Users/hannabjorgvinsdottir/Desktop/skickamig.txt"); //decryptAttachment(attachmentHash);
+//        QString date = "08-02-14";
+
+
+        message mess = message(from, subject, date, firstLine, messageLink, attachmentLink); //testing
+        this->messages.append(mess);
 }
 
 
@@ -285,10 +417,8 @@ void MainWindow::finishedSlot(QNetworkReply* reply)
 
 
 
-
-
-
-void MainWindow::loadMessages(){
+void MainWindow::loadMessages()
+{
     //Create a QListWidgetItem for each message, and set appropriate data
     //If message has been read, set item->setData(Qt::UserRole+3, "read"),
     //and if not, anything but "read" dislpays as unread
@@ -296,26 +426,32 @@ void MainWindow::loadMessages(){
     //Testing
     // QString header = QString("/private/tmp/e6aa3d26c8f3275d05c2761ddff875c1b3cf0256.warp2.header");
     // decryptHeader(header);
-    messages.append(message("Hanna@Warp2.net", "Hejsan", "10-02-14", "/Users/hannabjorgvinsdottir/Desktop/mail.txt", "/Users/hannabjorgvinsdottir/Desktop/skickamig.txt"));
-    messages.append(message("Lisa@Warp2.net", "Hey there", "12-02-14", "/Users/hannabjorgvinsdottir/Desktop/mail2.txt", ""));
-    messages.append(message("Emil@Warp2.net", "Hi Hanna", "09-04-14", "/Users/hannabjorgvinsdottir/Desktop/mail3.txt", ""));
+    //messages.append(message("Hanna@Warp2.net", "Hejsan", "10-02-14", "/Users/hannabjorgvinsdottir/Desktop/mail.txt", "/Users/hannabjorgvinsdottir/Desktop/skickamig.txt"));
+    //messages.append(message("Lisa@Warp2.net", "Hey there", "12-02-14", "/Users/hannabjorgvinsdottir/Desktop/mail2.txt", ""));
+    //messages.append(message("Emil@Warp2.net", "Hi Hanna", "09-04-14", "/Users/hannabjorgvinsdottir/Desktop/mail3.txt", ""));
+
     int i;
-    QString read = QString("not read");
+    QString read = QString("not read");  //flag message if not read
     for(i=0; i<messages.size(); i++){
-        if(i==3){
-            read = QString("read");
-        }
+//        if(i==3){ //just a test for visualisation
+//            read = QString("read");    //flag message as read
+//        }
+
         QListWidgetItem *item = new QListWidgetItem();
         message m = messages.at(i);
         item->setData(Qt::DisplayRole, m.getSender());
         item->setData(Qt::UserRole, m.getSubject());
-        item->setData(Qt::UserRole + 1, "Preview of email, stripped of newlines");
+        item->setData(Qt::UserRole + 1, m.getFirstLine()); //"Preview of email, stripped of newlines");
         item->setData(Qt::UserRole + 2, m.getDate());
         item->setData(Qt::UserRole + 3, read);
         ui->listWidget->addItem(item);
     }
     //std::cout << "Messages count: " << messages.count() << std::endl;
 }
+
+
+
+
 
 void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
 {
@@ -324,6 +460,11 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
     message mess = messages.at(ui->listWidget->currentRow());
     QString messageLink = mess.getMessageLink();
     QFile messageFile(messageLink);
+    if(!messageFile.exists())
+    {
+        std::cerr << "Message file " << messageFile.fileName().toStdString() << " does not exist in itemClicked function" << std::endl;
+        return;
+    }
     if(!messageFile.open(QIODevice::ReadOnly)){
         return; //or something
     }

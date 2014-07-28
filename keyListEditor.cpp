@@ -210,6 +210,12 @@ void KeyListEditor::on_importContactButton_clicked()
         connect(&gpg, SIGNAL(readyReadStandardOutput()), this, SLOT(readSlot()) );
         connect(&gpg, SIGNAL(readyReadStandardError()), this, SLOT(errorSlot()) );
 
+        ///////////////////////////////
+        ///
+        /// NEED TO SIGN THE KEY for it to work!   ///
+        ///
+        ///////////////////////////////
+
         updateKeys(); //update keys in view
     }
 }
