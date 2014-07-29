@@ -160,43 +160,126 @@ void MainWindow::on_mainContactsButton_clicked()
     }
 }
 
+
+
 void MainWindow::on_mainGetNewMessagesButton_clicked()
 {
     //Get list of message headers from server since last timestamp
 
-//    netmanager = new QNetworkAccessManager(this);
-//    QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
-//             this, SLOT(finishedSlot(QNetworkReply*)));
+    QString * serverReply;
+    QByteArray bytes;
+    QString messageFileName;
 
-//    QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
-//    QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
+    netmanager = new QNetworkAccessManager(this);
+    //QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
+    //         this, SLOT(inboxListFinishedSlot(QNetworkReply*)));
+
+    QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
+    QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
 
 
 
     //Try to decrypt each header in turn.  If a header decrypts successfully:
-        //Add the message and attachment as necessary and store them locally.
-        //Add a reference to them to the list of messages in the main display
+    //Add the message and attachment as necessary and store them locally.
+    //Add a reference to them to the list of messages in the main display
 
-    //    QEventLoop loop;
-    //QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+    QEventLoop loop;
 
-    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+
+    // Execute the event loop here, now we will wait here until finished() signal is emitted
     // which in turn will trigger event loop quit.
-    //loop.exec();
+    loop.exec();
 
 
-//        QStringList msgToDownload = newMsgHashes;
+    reply->waitForReadyRead(500);
 
-//        foreach(QString hsh, msgToDownload)
-//        {
-//            std::cout << hsh.toStdString() << std::endl;
-//            downloadHeader(hsh);
-//        }
+    // Reading attributes of the reply
+    // e.g. the HTTP status code
+    QVariant statusCodeV =
+    reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    // Or the target URL if it was a redirect:
+    QVariant redirectionTargetUrl =
+    reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    // see CS001432 on how to handle this
+
+    // no error received?
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        // read data from QNetworkReply here
+
+        // Example 2: Reading bytes form the reply
+        bytes = reply->readAll();  // bytes
+        serverReply = new QString(bytes); // string
+
+        std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
+
+        //std::cout << serverReply->toStdString() << std::endl;
+
+        QStringList msgHashList = serverReply->split(QRegExp("\n\|\r\n\|\r"));
+
+        //newMsgHashes
+        QStringList validMsgHashLines = msgHashList.filter(".header");
+
+        newMsgHashes.clear();
+
+        foreach(QString s, validMsgHashLines)
+        {
+            QStringList sp = s.split(QRegExp(","));
+            std::cout << sp[1].toStdString() << std::endl;
+            //QString msgHeaderURL = "http://www.localoptimum.com/warp2/inbox/"
+
+            newMsgHashes << sp[1];
+        }
+
+    }
+    // Some http error received
+    else
+    {
+        // handle errors here
+        std::cout << "Errors in reading URL" << std::endl;
+
+        std::cout << reply->errorString().toStdString() << std::endl;
+    }
+
+    reply->deleteLater();
+
+
+
+    ///////////////////////////
+    /// Here we need to be careful
+    /// we need a filter of existing messages and not just blindly keep adding to the existing mess!
+    ///////////////////////////
+
+
+    QStringList msgToDownload = newMsgHashes;
+
+
+
+    if(newMsgHashes.length()<1)
+    {
+        std::cout << "No new messages." << std::endl;
+        return;
+    }
+    else
+    {
+        std::cout << "Downloading " << newMsgHashes.length() << " headers." << std::endl;
+    }
+
+    //try to download the first one, just for fun
+    //downloadHeader(newMsgHashes[0]);
+
+
+    foreach(QString hsh, msgToDownload)
+    {
+        std::cout << hsh.toStdString() << std::endl;
+        downloadHeader(hsh);
+    }
 
     //Test newMsgHashes
 
-    newMsgHashes = QStringList()
-            << "39a8667f4f7b02bdf7607353bb1736de1b186ad9.warp2.header";
+    //newMsgHashes = QStringList()
+    //        << "39a8667f4f7b02bdf7607353bb1736de1b186ad9.warp2.header";
 
     QString decryptOutput;
 
@@ -229,6 +312,13 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
 
             //If we get here, this is great.  Decrypt the message, put a file:// link to the attachment, save as...
+
+            //First download the message
+
+            messageFileName = messageHash;
+            messageFileName.append(".message");
+            downloadMessage(messageFileName);
+
 
             QString messageHashLink = rootPath;
             messageHashLink.append(messageHash);
@@ -266,14 +356,49 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 }
 
 
+
+
+
 void MainWindow::downloadHeader(QString headerHash)
 {
 
-    netmanager = new QNetworkAccessManager(this);
-    QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
-             this, SLOT(inboxListFinishedSlot(QNetworkReply*)));
+    // Downloads a single header and saves it to disk, when provided with the headerhash.
 
-    QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
+    //Does the file exist already?  In which case, do not download it.
+    QString localHeaderCopyFileName = QDir::homePath();
+    localHeaderCopyFileName.append("/.warp2/");
+    localHeaderCopyFileName.append(headerHash);
+
+    QFile headerFile(localHeaderCopyFileName);
+
+    if(headerFile.exists())
+    {
+        std::cout << localHeaderCopyFileName.toStdString() << " exists, skipping..." << std::endl;
+        return;
+    }
+    else
+    {
+        std::cout << localHeaderCopyFileName.toStdString() << " downloading..." << std::endl;
+    }
+
+
+
+    QString * serverReply;
+    QByteArray bytes;
+
+    //std::cout << headerHash.toStdString() << std::endl;
+
+    QString urlString="http://www.localoptimum.com/warp2/inbox/";
+    urlString.append(headerHash);
+
+
+
+    netmanager = new QNetworkAccessManager(this);
+
+//    QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
+//             this, SLOT(headerDownloadFinishedSlot(QNetworkReply*)));
+
+    QUrl url(urlString);
     QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
 
     // NOTE: Store QNetworkReply pointer (maybe into caller).
@@ -283,14 +408,176 @@ void MainWindow::downloadHeader(QString headerHash)
 
 
     QEventLoop loop;
-    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
 
     // Execute the event loop here, now we will wait here until readyRead() signal is emitted
     // which in turn will trigger event loop quit.
     std::cout << "Getting header " << headerHash.toStdString() << std::endl;
 
     loop.exec();
+
+
+    // Reading attributes of the reply
+    // e.g. the HTTP status code
+    QVariant statusCodeV =
+    reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    // Or the target URL if it was a redirect:
+    QVariant redirectionTargetUrl =
+    reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    // see CS001432 on how to handle this
+
+    // no error received?
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        // read data from QNetworkReply here
+
+        // Example 2: Reading bytes form the reply
+        bytes = reply->readAll();  // bytes
+        serverReply = new QString(bytes); // string
+
+        std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
+
+        std::cout << "Header download resulted in: " << serverReply->toStdString() << std::endl;
+
+        //Write the header to file
+
+        headerFile.open(QIODevice::WriteOnly | QIODevice::Text);
+        headerFile.write(serverReply->toLocal8Bit());
+
+        headerFile.close();
+
+        std::cout << localHeaderCopyFileName.toStdString() << " download complete." << std::endl;
+
+    }
+    // Some http error received
+    else
+    {
+        // handle errors here
+        std::cout << "Errors in reading URL" << std::endl;
+
+        std::cout << reply->errorString().toStdString() << std::endl;
+    }
+
+    reply->deleteLater();
 }
+
+
+
+
+
+
+
+
+
+void MainWindow::downloadMessage(QString messageHashFileName)
+{
+
+    // Downloads a single header and saves it to disk, when provided with the headerhash
+
+    QStringList msgHashList = messageHashFileName.split(".");
+    QString msgHash = msgHashList[0];
+
+    //Does the file exist already?  In which case, do not download it.
+    QString localMessageCopyFileName = QDir::homePath();
+    localMessageCopyFileName.append("/.warp2/");
+    localMessageCopyFileName.append(msgHash);
+    localMessageCopyFileName.append(".warp2.message");
+
+    QFile messageFile(localMessageCopyFileName);
+
+    if(messageFile.exists())
+    {
+        std::cout << localMessageCopyFileName.toStdString() << " exists, skipping..." << std::endl;
+        return;
+    }
+    else
+    {
+        std::cout << localMessageCopyFileName.toStdString() << " downloading..." << std::endl;
+    }
+
+
+
+    QString * serverReply;
+    QByteArray bytes;
+
+    //std::cout << headerHash.toStdString() << std::endl;
+
+    QString urlString="http://www.localoptimum.com/warp2/inbox/";
+    urlString.append(messageHashFileName);
+
+
+
+    netmanager = new QNetworkAccessManager(this);
+
+//    QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
+//             this, SLOT(headerDownloadFinishedSlot(QNetworkReply*)));
+
+    QUrl url(urlString);
+    QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
+
+    // NOTE: Store QNetworkReply pointer (maybe into caller).
+    // When this HTTP request is finished you will receive this same
+    // QNetworkReply as response parameter.
+    // By the QNetworkReply pointer you can identify request and response.
+
+
+    QEventLoop loop;
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+
+    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
+    // which in turn will trigger event loop quit.
+    std::cout << "Getting message " << messageHash.toStdString() << std::endl;
+
+    loop.exec();
+
+
+    // Reading attributes of the reply
+    // e.g. the HTTP status code
+    QVariant statusCodeV =
+    reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    // Or the target URL if it was a redirect:
+    QVariant redirectionTargetUrl =
+    reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    // see CS001432 on how to handle this
+
+    // no error received?
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        // read data from QNetworkReply here
+
+        // Example 2: Reading bytes form the reply
+        bytes = reply->readAll();  // bytes
+        serverReply = new QString(bytes); // string
+
+        std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
+
+        std::cout << "Message download resulted in: " << serverReply->toStdString() << std::endl;
+
+        //Write the message to file
+
+        messageFile.open(QIODevice::WriteOnly | QIODevice::Text);
+        messageFile.write(serverReply->toLocal8Bit());
+
+        messageFile.close();
+
+        std::cout << localMessageCopyFileName.toStdString() << " download complete." << std::endl;
+
+    }
+    // Some http error received
+    else
+    {
+        // handle errors here
+        std::cout << "Errors in reading URL" << std::endl;
+
+        std::cout << reply->errorString().toStdString() << std::endl;
+    }
+
+    reply->deleteLater();
+}
+
+
+
+
 
 
 
@@ -413,7 +700,7 @@ void MainWindow::addMessageToInbox(QString from, QString subject, QString date, 
 
 
 
-void MainWindow::finishedSlot(QNetworkReply* reply)
+void MainWindow::headerDownloadFinishedSlot(QNetworkReply* reply)
 {
     QString * serverReply;
     QByteArray bytes;
@@ -442,6 +729,10 @@ void MainWindow::finishedSlot(QNetworkReply* reply)
         std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
 
         std::cout << "Header download resulted in: " << serverReply->toStdString() << std::endl;
+
+        //Write the header to file
+
+
 
 
     }
@@ -497,13 +788,15 @@ void MainWindow::inboxListFinishedSlot(QNetworkReply* reply)
         //newMsgHashes
         QStringList validMsgHashLines = msgHashList.filter(".header");
 
+        newMsgHashes.clear();
+
         foreach(QString s, validMsgHashLines)
         {
             QStringList sp = s.split(QRegExp(","));
             std::cout << sp[1].toStdString() << std::endl;
             //QString msgHeaderURL = "http://www.localoptimum.com/warp2/inbox/"
 
-
+            newMsgHashes << sp[1];
         }
 
     }
