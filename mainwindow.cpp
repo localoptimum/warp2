@@ -169,6 +169,9 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     QString * serverReply;
     QByteArray bytes;
     QString messageFileName;
+    QString headerFileName;
+
+    QStringList msgToDownload;
 
     netmanager = new QNetworkAccessManager(this);
     //QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
@@ -221,7 +224,6 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
         //newMsgHashes
         QStringList validMsgHashLines = msgHashList.filter(".header");
 
-        newMsgHashes.clear();
 
         foreach(QString s, validMsgHashLines)
         {
@@ -229,7 +231,16 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
             std::cout << sp[1].toStdString() << std::endl;
             //QString msgHeaderURL = "http://www.localoptimum.com/warp2/inbox/"
 
-            newMsgHashes << sp[1];
+            //If we do not already have this header, add it to the list of headers to obtain
+            //This needs to be more sophisticated, because we don't want to keep headers indefinitely...
+            headerFileName = rootPath;
+            headerFileName.append(sp[1]);
+            std::cout << "Checking " << headerFileName.toStdString() << std::endl;
+
+            if(!QFile(headerFileName).exists())
+            {
+                msgToDownload << sp[1];
+            }
         }
 
     }
@@ -246,24 +257,15 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
 
 
-    ///////////////////////////
-    /// Here we need to be careful
-    /// we need a filter of existing messages and not just blindly keep adding to the existing mess!
-    ///////////////////////////
 
-
-    QStringList msgToDownload = newMsgHashes;
-
-
-
-    if(newMsgHashes.length()<1)
+    if(msgToDownload.length()<1)
     {
         std::cout << "No new messages." << std::endl;
         return;
     }
     else
     {
-        std::cout << "Downloading " << newMsgHashes.length() << " headers." << std::endl;
+        std::cout << "Downloading " << msgToDownload.length() << " headers." << std::endl;
     }
 
     //try to download the first one, just for fun
@@ -279,11 +281,11 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     //Test newMsgHashes
 
     //newMsgHashes = QStringList()
-    //        << "39a8667f4f7b02bdf7607353bb1736de1b186ad9.warp2.header";
+    //        << "39a8667f4f7b02bdf7607353bb1736de1b186ad9.header";
 
     QString decryptOutput;
 
-    foreach(QString hdr, newMsgHashes)
+    foreach(QString hdr, msgToDownload)
     {
         decryptOutput = decryptHeader(QString(rootPath).append(hdr));
 
@@ -322,7 +324,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
             QString messageHashLink = rootPath;
             messageHashLink.append(messageHash);
-            messageHashLink.append(".warp2.message");
+            messageHashLink.append(".message");
 
             std::cout << messageHashLink.toStdString() << std::endl;
 
@@ -481,7 +483,7 @@ void MainWindow::downloadMessage(QString messageHashFileName)
     QString localMessageCopyFileName = QDir::homePath();
     localMessageCopyFileName.append("/.warp2/");
     localMessageCopyFileName.append(msgHash);
-    localMessageCopyFileName.append(".warp2.message");
+    localMessageCopyFileName.append(".message");
 
     QFile messageFile(localMessageCopyFileName);
 
@@ -824,7 +826,7 @@ void MainWindow::loadMessages()
     //and if not, anything but "read" dislpays as unread
 
     //Testing
-    // QString header = QString("/private/tmp/e6aa3d26c8f3275d05c2761ddff875c1b3cf0256.warp2.header");
+    // QString header = QString("/private/tmp/e6aa3d26c8f3275d05c2761ddff875c1b3cf0256.header");
     // decryptHeader(header);
     //messages.append(message("Hanna@Warp2.net", "Hejsan", "10-02-14", "/Users/hannabjorgvinsdottir/Desktop/mail.txt", "/Users/hannabjorgvinsdottir/Desktop/skickamig.txt"));
     //messages.append(message("Lisa@Warp2.net", "Hey there", "12-02-14", "/Users/hannabjorgvinsdottir/Desktop/mail2.txt", ""));
