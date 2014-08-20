@@ -164,16 +164,10 @@ void MainWindow::on_mainContactsButton_clicked()
 
 void MainWindow::on_mainGetNewMessagesButton_clicked()
 {
-    QString * serverReply;
-    QByteArray bytes;
 
     //Get list of message headers from server since last timestamp
 
-<<<<<<< HEAD
-    netmanager = new QNetworkAccessManager(this);
-    //QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
-    //         this, SLOT(getInboxFinishedSlot(QNetworkReply*)));
-=======
+
     QString * serverReply;
     QByteArray bytes;
     QString messageFileName;
@@ -184,7 +178,6 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     netmanager = new QNetworkAccessManager(this);
     //QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
     //         this, SLOT(inboxListFinishedSlot(QNetworkReply*)));
->>>>>>> b5044ef90b9ceb82ff8849e3fa9ab59e2e44571d
 
     QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
     QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
@@ -205,11 +198,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
     reply->waitForReadyRead(500);
 
-<<<<<<< HEAD
-=======
-    reply->waitForReadyRead(500);
 
->>>>>>> b5044ef90b9ceb82ff8849e3fa9ab59e2e44571d
     // Reading attributes of the reply
     // e.g. the HTTP status code
     QVariant statusCodeV =
@@ -218,7 +207,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     QVariant redirectionTargetUrl =
     reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     // see CS001432 on how to handle this
-<<<<<<< HEAD
+
 
     // no error received?
     if (reply->error() == QNetworkReply::NoError)
@@ -231,50 +220,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
         std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
 
-        std::cout << "Header download resulted in: " << serverReply->toStdString() << std::endl;
-
-        //newMsgHashes = *serverReply;
-
-
-    }
-    // Some http error received
-    else
-    {
-        // handle errors here
-        std::cout << "Errors in reading URL" << std::endl;
-        std::cout << reply->errorString().toStdString() << std::endl;
-
-        return;
-    }
-
-    return;
-
-        QStringList msgToDownload = newMsgHashes;
-
-        foreach(QString hsh, msgToDownload)
-        {
-            std::cout << hsh.toStdString() << std::endl;
-            downloadHeader(hsh);
-        }
-
-    //Test newMsgHashes
-
-//    newMsgHashes = QStringList()
-//            << "b8838a2e3869ed98bbc2f0e3c5c8fdbfee4215fd.warp2.header";
-=======
-
-    // no error received?
-    if (reply->error() == QNetworkReply::NoError)
-    {
-        // read data from QNetworkReply here
-
-        // Example 2: Reading bytes form the reply
-        bytes = reply->readAll();  // bytes
-        serverReply = new QString(bytes); // string
-
-        std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
-
-        //std::cout << serverReply->toStdString() << std::endl;
+        std::cout << serverReply->toStdString() << std::endl;
 
         QStringList msgHashList = serverReply->split(QRegExp("\n\|\r\n\|\r"));
 
@@ -284,19 +230,19 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
         foreach(QString s, validMsgHashLines)
         {
-            QStringList sp = s.split(QRegExp(","));
-            std::cout << sp[1].toStdString() << std::endl;
+            //QStringList sp = s.split(QRegExp(","));
+            //std::cout << sp[1].toStdString() << std::endl;
             //QString msgHeaderURL = "http://www.localoptimum.com/warp2/inbox/"
 
             //If we do not already have this header, add it to the list of headers to obtain
             //This needs to be more sophisticated, because we don't want to keep headers indefinitely...
             headerFileName = rootPath;
-            headerFileName.append(sp[1]);
+            headerFileName.append(s);
             std::cout << "Checking " << headerFileName.toStdString() << std::endl;
 
             if(!QFile(headerFileName).exists())
             {
-                msgToDownload << sp[1];
+                msgToDownload << s;
             }
         }
 
@@ -339,7 +285,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
     //newMsgHashes = QStringList()
     //        << "39a8667f4f7b02bdf7607353bb1736de1b186ad9.header";
->>>>>>> b5044ef90b9ceb82ff8849e3fa9ab59e2e44571d
+
 
     QString decryptOutput;
 
