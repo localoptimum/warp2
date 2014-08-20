@@ -40,12 +40,18 @@ private slots:
     void on_mainGetNewMessagesButton_clicked();
 
     void inboxListFinishedSlot(QNetworkReply* reply);
+<<<<<<< HEAD
     void finishedSlot(QNetworkReply* reply);
+=======
+    void headerDownloadFinishedSlot(QNetworkReply* reply);
+>>>>>>> b5044ef90b9ceb82ff8849e3fa9ab59e2e44571d
 
 
     void on_listWidget_itemClicked(QListWidgetItem *item);
 
     void on_replyButton_clicked();
+
+
 
 private:
     Ui::MainWindow *ui;
@@ -70,6 +76,8 @@ private:
     QList<message> messages;//TESTING
 
     void downloadHeader(QString headerHash);
+    void downloadMessage(QString msgHash);
+
 
     QString decryptHeader(QString headerHash);
     QString decryptMessage(QString messageHash);
@@ -78,7 +86,6 @@ private:
     void addMessageToInbox(QString from, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink);
 
 
-    void downloadMessage(QString msgHash);
 
     void downloadAttachment(QString attachHash);
 

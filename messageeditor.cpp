@@ -412,7 +412,7 @@ void MessageEditor::assembleHeader(void)
     sha1process.close();
 
     QProcess fileRenameProcess;
-    QString headerSha1Filename = QString("/tmp/").append(headerSha1).append(".warp2.header");  //this is sloppy, need to find directory of original file dynamically
+    QString headerSha1Filename = QString("/tmp/").append(headerSha1).append(".header");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
 
     renamePipe.append(headerEncryptedFileName);
@@ -668,7 +668,7 @@ void MessageEditor::assembleMessage(void)
     sha1process.close();
 
     QProcess fileRenameProcess;
-    QString messageSha1Filename = QString("/tmp/").append(messageSha1).append(".warp2.message");  //this is sloppy, need to find directory of original file dynamically
+    QString messageSha1Filename = QString("/tmp/").append(messageSha1).append(".message");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
 
     renamePipe.append(messageEncryptedFileName);
@@ -847,7 +847,7 @@ void MessageEditor::assembleAttachment(void)
     sha1process.close();
 
     QProcess fileRenameProcess;
-    QString attachmentSha1Filename = QString("/tmp/").append(attachmentSha1).append(".warp2.attachment");  //this is sloppy, need to find directory of original file dynamically
+    QString attachmentSha1Filename = QString("/tmp/").append(attachmentSha1).append(".attachment");  //this is sloppy, need to find directory of original file dynamically
     QString renamePipe = "mv ";
     renamePipe.append(attachmentFileNameAsc);
     renamePipe.append(" ");
