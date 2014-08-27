@@ -64,12 +64,13 @@ private:
     QString messageHash;
     QString attachHash;
     QString timestamp;
+    QString timestampFileName;
     QString userPassword;
     QString clearTextHash;
 
 
 
-    QList<message> messages;//TESTING
+    QList<message> messages;
 
     void downloadHeader(QString headerHash);
     void downloadMessage(QString msgHash);
@@ -78,14 +79,16 @@ private:
     QString decryptHeader(QString headerHash);
     QString decryptMessage(QString messageHash);
 
+    void updateTimeStamp(void);
+
 
     void addMessageToInbox(QString from, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink);
-
+    void addMessageToGui(message m);
 
 
     void downloadAttachment(QString attachHash);
 
-    void loadMessages();
+    void firstLoadMessages();
 
 };
 

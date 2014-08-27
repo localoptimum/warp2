@@ -6,7 +6,7 @@
 #include "messagedelegate.h"
 #include <QStandardPaths>
 #include <QDir>
-#include "message.h" //TESTING
+#include "message.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //Load message-list file;
     //Load unread message list file;
 
-    loadMessages();
+    firstLoadMessages();
 
     //Set messages that are on unread list as "unread"
 }
@@ -170,6 +170,8 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     QByteArray bytes;
     QString messageFileName;
     QString headerFileName;
+    QString ignoreFileName;
+    QString headerFileNameClear;
 
     QStringList msgToDownload;
 
@@ -224,6 +226,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
         //newMsgHashes
         QStringList validMsgHashLines = msgHashList.filter(".header");
 
+        msgToDownload.clear();
 
         foreach(QString s, validMsgHashLines)
         {
@@ -235,9 +238,19 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
             //This needs to be more sophisticated, because we don't want to keep headers indefinitely...
             headerFileName = rootPath;
             headerFileName.append(sp[1]);
+            ignoreFileName = rootPath;
+            ignoreFileName.append(sp[1]);
+            ignoreFileName.append(".ignore");
+            headerFileNameClear = headerFileName;
+            headerFileNameClear.append(".txt");
+
             std::cout << "Checking " << headerFileName.toStdString() << std::endl;
 
-            if(!QFile(headerFileName).exists())
+            if(
+                    !QFile(headerFileName).exists() &&
+                    !QFile(ignoreFileName).exists() &&
+                    !QFile(headerFileNameClear).exists()
+                    )
             {
                 msgToDownload << sp[1];
             }
@@ -310,8 +323,6 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
             QString attachmentHash = headerContent.filter("AttachmentHash:").takeAt(0).remove(0,15);
             std::cout << "Attachment Hash: " << attachmentHash.toStdString() << std::endl;
 
-            // put string "Date:" before the date, so filter("Date:") is possible?
-
 
             //If we get here, this is great.  Decrypt the message, put a file:// link to the attachment, save as...
 
@@ -328,12 +339,12 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
             std::cout << messageHashLink.toStdString() << std::endl;
 
-            QString message = decryptMessage(messageHashLink);
+            QString msg = decryptMessage(messageHashLink);
 
 
-            std::cout << "Message:" << std::endl << message.toStdString() << std::endl;
+            std::cout << "Message:" << std::endl << msg.toStdString() << std::endl;
 
-            QStringList messageLines = message.split("\n");
+            QStringList messageLines = msg.split("\n");
             QString firstLine = messageLines[0];
 
 
@@ -343,17 +354,20 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
                 firstLine.append("...");
             }
 
-            if(message != "")
+            if(msg != "")
             {
                 QString messageLink = messageHashLink;
                 messageLink.append(".txt");
                 addMessageToInbox(from, subject, date, firstLine, messageLink, attachmentHash);
+
+                //message(QString sender, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink)
+                message m(from, subject, date, firstLine, messageLink, attachmentHash);
+
+                //Refresh inbox
+                addMessageToGui(m);
             }
         }
     }
-
-    //Refresh inbox
-    loadMessages();
 
 }
 
@@ -594,12 +608,39 @@ QString MainWindow::decryptHeader(QString headerHash)
     //ifdef linux..
 
     QFile headerHashFile(headerHash);
+    QString ignoreFileName;
+
+    ignoreFileName = headerHash;
+    ignoreFileName.append(".ignore");
+    QFile ignoreFile(ignoreFileName);
+
 
     if(!headerHashFile.exists())
     {
         std::cerr << "File not found " << headerHash.toStdString() << std::endl;
         return("");
     }
+
+    QString clearFileName = headerHash;
+    clearFileName.append(".txt");
+
+    //If the file is already decrypted, this then this is not a new message.  Don't try to rebuild it.
+    QFile clearFile(clearFileName);
+
+    if(clearFile.exists())
+    {
+        //Nothing to do - this should not happen, deal with this sensibly here later!!!
+        return("");
+    }
+
+
+    //If there is an ignore file, then this is an old header intended for someone else.
+    if(ignoreFile.exists())
+    {
+        //An old header, not for us.  Return.
+        return("");
+    }
+
 
     decryptProcess.start(gpgPath,
                          QStringList() << "--batch"
@@ -618,11 +659,22 @@ QString MainWindow::decryptHeader(QString headerHash)
     if(decryptError.contains("no secret key", Qt::CaseInsensitive))
     {
         std::cout << "No secret key, mail not for you" << std::endl;
+
+        //Create an empty ignore file for fast inbox reconstruction
+
+
+        ignoreFile.open(QIODevice::ReadWrite);
+        ignoreFile.close();
         return("");
     }
     else
     {
-        return(decryptOutput);
+            clearFile.open(QIODevice::WriteOnly | QIODevice::Text);
+            clearFile.write(decryptOutput.toLocal8Bit());
+
+            clearFile.close();
+
+            return(decryptOutput);
     }
 }
 
@@ -818,8 +870,24 @@ void MainWindow::inboxListFinishedSlot(QNetworkReply* reply)
 
 
 
+void MainWindow::addMessageToGui(message m)
+{
+    messages.append(m);
 
-void MainWindow::loadMessages()
+    QListWidgetItem *item = new QListWidgetItem();
+
+    item->setData(Qt::DisplayRole, m.getSender());
+    item->setData(Qt::UserRole, m.getSubject());
+    item->setData(Qt::UserRole + 1, m.getFirstLine()); //"Preview of email, stripped of newlines");
+    item->setData(Qt::UserRole + 2, m.getDate());
+    item->setData(Qt::UserRole + 3, QString("not read"));
+    ui->listWidget->addItem(item);
+}
+
+
+
+
+void MainWindow::firstLoadMessages()
 {
     //Create a QListWidgetItem for each message, and set appropriate data
     //If message has been read, set item->setData(Qt::UserRole+3, "read"),
@@ -833,6 +901,131 @@ void MainWindow::loadMessages()
     //messages.append(message("Emil@Warp2.net", "Hi Hanna", "09-04-14", "/Users/hannabjorgvinsdottir/Desktop/mail3.txt", ""));
 
     int i;
+
+    //Load existing messages from files here
+
+    std::cout << "Loading saved messages from " << rootPath.toStdString() << std::endl;
+
+    QDir w2dir(rootPath);
+
+    QStringList headerFilter;
+    headerFilter << "*.header.txt";
+
+    w2dir.setNameFilters(headerFilter);
+    w2dir.setSorting(QDir::Time);
+
+    QStringList headerList = w2dir.entryList(headerFilter);
+
+    QString headerFileName;
+    QFile* headerFile;
+
+    QString msgFileName;
+    QFile* msgFile;
+
+    QString header;
+
+    QStringList headerContent;
+    QString from;
+    QString date;
+    QString subject;
+    QString messageHash;
+    QString attachmentHash;
+
+
+
+    for(i=0; i<headerList.length(); i++)
+    {
+        std::cout << headerList.at(i).toStdString() << std::endl;
+
+        headerFileName=rootPath;
+        headerFileName.append(headerList.at(i));
+
+        headerFile = new QFile(headerFileName);
+        headerFile->open(QIODevice::ReadOnly | QIODevice::Text);
+
+        header = headerFile->readAll();
+        headerFile->close();
+        headerFile->deleteLater();
+
+        std::cout << header.toStdString() << std::endl;
+
+
+        //Now parse the header and transform it into something nice
+
+        //create new message and put in messages list
+        headerContent = decryptOutput.split(QRegExp(";"));
+
+        from = headerContent.filter("From:").takeAt(0).remove(0,5);
+        std::cout << "From: " << from.toStdString() <<  std::endl;
+
+        date = headerContent.filter("Date:").takeAt(0).remove(0,5);
+        std::cout << "Date: " << date.toStdString() <<  std::endl;
+
+        subject = headerContent.filter("Subject:").takeAt(0).remove(0,8);
+        std::cout << "Subject: " << subject.toStdString() <<  std::endl;
+
+        messageHash = headerContent.filter("MessageHash:").takeAt(0).remove(0,12);
+        std::cout << "Message hash: " << messageHash.toStdString() << std::endl;
+
+        attachmentHash = headerContent.filter("AttachmentHash:").takeAt(0).remove(0,15);
+        std::cout << "Attachment Hash: " << attachmentHash.toStdString() << std::endl;
+
+
+
+        //Get the first line of the message
+
+        msgFileName = rootPath;
+        msgFileName.append(messageHash);
+        msgFileName.append(".message.txt");
+
+
+        msgFile = new QFile(msgFileName);
+
+        //Assume messages are large and this process is costly in time for hundreds of messages.  Quicker to open once, read first line, close.  Open again, dump entire contents, close.
+
+        msgFile->open(QIODevice::ReadOnly | QIODevice::Text);
+
+        QTextStream inputStream(msgFile);
+        firstLine = inputStream.readline;
+        msgFile->close();
+
+        if(firstLine.length()>20)
+        {
+            firstLine.truncate(20);
+            firstLine.append("...");
+        }
+
+
+        msgFile->open(QIODevice::ReadOnly | QIODevice::Text);
+
+        msg = msgFile->readAll();
+        msgFile->close();
+
+
+
+        //QString msg = decryptMessage(messageHashLink);
+
+
+        //std::cout << "Message:" << std::endl << msg.toStdString() << std::endl;
+
+
+
+        if(msg != "")
+        {
+            QString messageLink = messageHashLink;
+            messageLink.append(".txt");
+            addMessageToInbox(from, subject, date, firstLine, messageLink, attachmentHash);
+
+            //message(QString sender, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink)
+            message m(from, subject, date, firstLine, messageLink, attachmentHash);
+
+            //Refresh inbox
+            addMessageToGui(m);
+        }
+
+    }
+
+
     QString read = QString("not read");  //flag message if not read
     for(i=0; i<messages.size(); i++){
 //        if(i==3){ //just a test for visualisation
