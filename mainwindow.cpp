@@ -164,7 +164,9 @@ void MainWindow::on_mainContactsButton_clicked()
 
 void MainWindow::on_mainGetNewMessagesButton_clicked()
 {
+
     //Get list of message headers from server since last timestamp
+
 
     QString * serverReply;
     QByteArray bytes;
@@ -196,8 +198,8 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     // which in turn will trigger event loop quit.
     loop.exec();
 
-
     reply->waitForReadyRead(500);
+
 
     // Reading attributes of the reply
     // e.g. the HTTP status code
@@ -207,6 +209,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     QVariant redirectionTargetUrl =
     reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     // see CS001432 on how to handle this
+
 
     // no error received?
     if (reply->error() == QNetworkReply::NoError)
@@ -219,7 +222,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
         std::cout << "Read " << bytes.size() << " bytes from inbox." << std::endl;
 
-        //std::cout << serverReply->toStdString() << std::endl;
+        std::cout << serverReply->toStdString() << std::endl;
 
         QStringList msgHashList = serverReply->split(QRegExp("\n\|\r\n\|\r"));
 
@@ -230,19 +233,15 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
         foreach(QString s, validMsgHashLines)
         {
-            QStringList sp = s.split(QRegExp(","));
-            std::cout << sp[1].toStdString() << std::endl;
+            //QStringList sp = s.split(QRegExp(","));
+            //std::cout << sp[1].toStdString() << std::endl;
             //QString msgHeaderURL = "http://www.localoptimum.com/warp2/inbox/"
 
             //If we do not already have this header, add it to the list of headers to obtain
             //This needs to be more sophisticated, because we don't want to keep headers indefinitely...
             headerFileName = rootPath;
-            headerFileName.append(sp[1]);
-            ignoreFileName = rootPath;
-            ignoreFileName.append(sp[1]);
-            ignoreFileName.append(".ignore");
-            headerFileNameClear = headerFileName;
-            headerFileNameClear.append(".txt");
+
+            headerFileName.append(s);
 
             std::cout << "Checking " << headerFileName.toStdString() << std::endl;
 
@@ -252,7 +251,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
                     !QFile(headerFileNameClear).exists()
                     )
             {
-                msgToDownload << sp[1];
+                msgToDownload << s;
             }
         }
 
@@ -295,6 +294,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
 
     //newMsgHashes = QStringList()
     //        << "39a8667f4f7b02bdf7607353bb1736de1b186ad9.header";
+
 
     QString decryptOutput;
 

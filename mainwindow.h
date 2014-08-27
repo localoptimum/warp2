@@ -40,8 +40,8 @@ private slots:
     void on_mainGetNewMessagesButton_clicked();
 
     void inboxListFinishedSlot(QNetworkReply* reply);
-    void headerDownloadFinishedSlot(QNetworkReply* reply);
 
+    void headerDownloadFinishedSlot(QNetworkReply* reply);
 
     void on_listWidget_itemClicked(QListWidgetItem *item);
 
