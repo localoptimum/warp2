@@ -358,7 +358,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
             {
                 QString messageLink = messageHashLink;
                 messageLink.append(".txt");
-                addMessageToInbox(from, subject, date, firstLine, messageLink, attachmentHash);
+                //addMessageToInbox(from, subject, date, firstLine, messageLink, attachmentHash);
 
                 //message(QString sender, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink)
                 message m(from, subject, date, firstLine, messageLink, attachmentHash);
@@ -922,7 +922,10 @@ void MainWindow::firstLoadMessages()
     QString msgFileName;
     QFile* msgFile;
 
-    QString header;
+    QString headertxt;
+    QString firstLine;
+    QString msg;
+    QString messageLink;
 
     QStringList headerContent;
     QString from;
@@ -943,17 +946,17 @@ void MainWindow::firstLoadMessages()
         headerFile = new QFile(headerFileName);
         headerFile->open(QIODevice::ReadOnly | QIODevice::Text);
 
-        header = headerFile->readAll();
+        headertxt = headerFile->readAll();
         headerFile->close();
         headerFile->deleteLater();
 
-        std::cout << header.toStdString() << std::endl;
+        std::cout << headertxt.toStdString() << std::endl;
 
 
         //Now parse the header and transform it into something nice
 
         //create new message and put in messages list
-        headerContent = decryptOutput.split(QRegExp(";"));
+        headerContent = headertxt.split(QRegExp(";"));
 
         from = headerContent.filter("From:").takeAt(0).remove(0,5);
         std::cout << "From: " << from.toStdString() <<  std::endl;
@@ -986,7 +989,8 @@ void MainWindow::firstLoadMessages()
         msgFile->open(QIODevice::ReadOnly | QIODevice::Text);
 
         QTextStream inputStream(msgFile);
-        firstLine = inputStream.readline;
+        firstLine = inputStream.readLine();
+
         msgFile->close();
 
         if(firstLine.length()>20)
@@ -1012,9 +1016,15 @@ void MainWindow::firstLoadMessages()
 
         if(msg != "")
         {
-            QString messageLink = messageHashLink;
-            messageLink.append(".txt");
-            addMessageToInbox(from, subject, date, firstLine, messageLink, attachmentHash);
+            messageLink = rootPath;
+            messageLink.append(messageHash);
+
+            //std::cout << "Message hash during parse: " << messageHash.toStdString() << std::endl;
+
+            messageLink.append(".message.txt");
+
+            //Put the message data into the GUI and the message array.
+            //addMessageToInbox(from, subject, date, firstLine, messageLink, attachmentHash);
 
             //message(QString sender, QString subject, QString date, QString firstLine, QString messageLink, QString attachmentLink)
             message m(from, subject, date, firstLine, messageLink, attachmentHash);
