@@ -1034,7 +1034,7 @@ void MainWindow::firstLoadMessages()
         }
 
     }
-
+/*
 
     QString read = QString("not read");  //flag message if not read
     for(i=0; i<messages.size(); i++){
@@ -1052,6 +1052,7 @@ void MainWindow::firstLoadMessages()
         ui->listWidget->addItem(item);
     }
     //std::cout << "Messages count: " << messages.count() << std::endl;
+    */
 }
 
 
