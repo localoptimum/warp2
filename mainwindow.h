@@ -60,6 +60,8 @@ private:
 
     QString rootPath;
 
+    QString replyTo;
+
     QString headerHash;
     QString messageHash;
     QString attachHash;

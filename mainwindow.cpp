@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
     attachHash="";
     timestamp="";
     userPassword="";
+    replyTo="";
 
 
 
@@ -1035,7 +1036,7 @@ void MainWindow::firstLoadMessages()
 
     }
 
-
+/*
     QString read = QString("not read");  //flag message if not read
     for(i=0; i<messages.size(); i++){
 //        if(i==3){ //just a test for visualisation
@@ -1052,6 +1053,7 @@ void MainWindow::firstLoadMessages()
         ui->listWidget->addItem(item);
     }
     //std::cout << "Messages count: " << messages.count() << std::endl;
+    */
 }
 
 
@@ -1062,6 +1064,13 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
 {
     //Get messagecontent from messages.at(ui->listWidget->currentRow()).getMessageLink();
     //Load the content into textEdit, and mark item as read
+    int row = ui->listWidget->currentRow();
+    int totalmsg = messages.length();
+
+    std::cout << "Requesting item " << row << " from GUI." << std::endl;
+    std::cout << "Message array has " << totalmsg << " entries." << std::endl;
+
+
     message mess = messages.at(ui->listWidget->currentRow());
     QString messageLink = mess.getMessageLink();
     QFile messageFile(messageLink);
@@ -1081,6 +1090,9 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
     //QString text = QString("Message nbr ").append(QString::number(ui->listWidget->currentRow()));
     ui->textEdit->setText(messageContent);
     item->setData(Qt::UserRole + 3, QString("read"));
+
+    replyTo = mess.getSender();
+
     //If reply button is disabled, enable it
     if(!ui->replyButton->isEnabled()){
         ui->replyButton->setEnabled(true);
@@ -1090,4 +1102,13 @@ void MainWindow::on_listWidget_itemClicked(QListWidgetItem *item)
 void MainWindow::on_replyButton_clicked()
 {
     //show messageeditor, with sender of current email as recipient
+
+    if(!messageEditor->isVisible()){
+        messageEditor -> show();
+        //std::cout << "not visible" << std::endl;
+    }else{
+        messageEditor->raise();
+        messageEditor->activateWindow();
+        //std::cout << "not active window" << std::endl;
+    }
 }
