@@ -1037,6 +1037,7 @@ void MainWindow::firstLoadMessages()
     }
 
 /*
+
     QString read = QString("not read");  //flag message if not read
     for(i=0; i<messages.size(); i++){
 //        if(i==3){ //just a test for visualisation

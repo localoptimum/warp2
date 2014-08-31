@@ -386,8 +386,7 @@ void MessageEditor::assembleHeader(void)
 
     QProcess sha1process;
 
-
-    sha1process.start("sha1sum", QStringList() << headerEncryptedFileName);
+    sha1process.start(shaPath, QStringList() << headerEncryptedFileName);
 
     sha1process.setProcessChannelMode(QProcess::ForwardedChannels);
 
@@ -440,7 +439,7 @@ void MessageEditor::assembleHeader(void)
     else
     {
         headerFileName = headerSha1Filename;
-        sendProgress->setAssembleFilesProgress(33);
+        sendProgress->setAssembleFilesProgress(100);
     }
 //    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;
 //    std::cout << "Rename Error:" << std::endl << renameError.toStdString() << std::endl;
@@ -697,7 +696,7 @@ void MessageEditor::assembleMessage(void)
     {
         messageFileName = messageSha1Filename;
         ((MainWindow*)parent())->setMessageHash(messageSha1);
-        sendProgress->setAssembleFilesProgress(66);
+        sendProgress->setAssembleFilesProgress(33);
 
     }
 //    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;
@@ -737,7 +736,7 @@ void MessageEditor::assembleAttachment(void)
     {
         std::cout << "No attachment to assemble." << std::endl;
         attachmentFileName = "";
-        sendProgress->setAssembleFilesProgress(100);
+        sendProgress->setAssembleFilesProgress(66);
         return;
     }
 
@@ -873,7 +872,7 @@ void MessageEditor::assembleAttachment(void)
     else
     {
         attachmentFileName = attachmentSha1Filename;
-        sendProgress->setAssembleFilesProgress(100);
+        sendProgress->setAssembleFilesProgress(66);
 
     }
 //    std::cout << "Rename Output:" << std::endl << renameOutput.toStdString() << std::endl;

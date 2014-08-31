@@ -36,7 +36,7 @@
             painter->drawText(r.left(), r.top(), r.width(), r.height(), Qt::AlignBottom|Qt::AlignLeft, sender, &r);
 
             //DATE
-            r = option.rect.adjusted(option.rect.width() -60, 0, 20, -30);
+            r = option.rect.adjusted(option.rect.width() -120, 0, 20, -30);
             painter->setFont( QFont( "Lucida Grande", 9, QFont::Normal ) );
             painter->drawText(r.left(), r.top(), r.width(), r.height(), Qt::AlignBottom|Qt::AlignLeft, date, &r);
 

@@ -9,6 +9,7 @@
 #include <QNetworkRequest>
 #include <QEventLoop>
 #include <QHttpMultiPart>
+#include <QTimer> //Test
 
 messageSender::messageSender(QObject *parent) :
     QObject(parent),
@@ -35,7 +36,7 @@ void messageSender::uploadMessage(QString headerFileName, QString messageFileNam
     uploadItem(headerFileName);
     setTotalSendProgress(50,100);
 
-
+std::cout << "header: " << headerFileName.toStdString() << " message: " << messageFileName.toStdString() << " att: " << attachmentFileName.toStdString() << std::endl;
     uploadItem(messageFileName);
     setTotalSendProgress(75,100);
 
@@ -107,10 +108,8 @@ void messageSender::uploadItem(QString itemName)
         connect(netReply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(setUploadHeaderProgress(qint64,qint64)), Qt::DirectConnection);
     }
 
-
     connect(netManager, SIGNAL(finished(QNetworkReply*)), SLOT(requestFinished(QNetworkReply*)));
     QEventLoop loop;
-
     QObject::connect(netReply, SIGNAL(readyRead()), &loop, SLOT(quit()));
     // Execute the event loop here, now we will wait here until readyRead() signal is emitted
     // which in turn will trigger event loop quit.
