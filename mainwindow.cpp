@@ -1,3 +1,31 @@
+//Copyright (c) 2014, Phil Bentley
+//All rights reserved.
+
+//Redistribution and use in source and binary forms, with or without
+//modification, are permitted provided that the following conditions are met:
+
+//1. Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//2. Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+
+//THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+//ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+//DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+//ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+//(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+//LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+//ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+//The views and conclusions contained in the software and documentation are those
+//of the authors and should not be interpreted as representing official policies,
+//either expressed or implied, of the University of Uppsala or the European
+//Spallation Source.
+
 #include <iostream>
 #include "mainwindow.h"
 #include "keyListEditor.h"
@@ -182,7 +210,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
     //QObject::connect(netmanager, SIGNAL(finished(QNetworkReply*)),
     //         this, SLOT(inboxListFinishedSlot(QNetworkReply*)));
 
-    QUrl url("http://www.localoptimum.com/warp2/readInbox.php");
+    QUrl url("http://www.someServer/warp2/readInbox.php");
     QNetworkReply* reply = netmanager->get(QNetworkRequest(url));
 
 
@@ -236,7 +264,7 @@ void MainWindow::on_mainGetNewMessagesButton_clicked()
         {
             //QStringList sp = s.split(QRegExp(","));
             //std::cout << sp[1].toStdString() << std::endl;
-            //QString msgHeaderURL = "http://www.localoptimum.com/warp2/inbox/"
+            //QString msgHeaderURL = "http://www.someServer/warp2/inbox/"
 
             //If we do not already have this header, add it to the list of headers to obtain
             //This needs to be more sophisticated, because we don't want to keep headers indefinitely...
@@ -405,7 +433,7 @@ void MainWindow::downloadHeader(QString headerHash)
 
     //std::cout << headerHash.toStdString() << std::endl;
 
-    QString urlString="http://www.localoptimum.com/warp2/inbox/";
+    QString urlString="http://www.someServer/warp2/inbox/";
     urlString.append(headerHash);
 
 
@@ -519,7 +547,7 @@ void MainWindow::downloadMessage(QString messageHashFileName)
 
     //std::cout << headerHash.toStdString() << std::endl;
 
-    QString urlString="http://www.localoptimum.com/warp2/inbox/";
+    QString urlString="http://www.someServer/warp2/inbox/";
     urlString.append(messageHashFileName);
 
 
@@ -849,7 +877,7 @@ void MainWindow::inboxListFinishedSlot(QNetworkReply* reply)
         {
             QStringList sp = s.split(QRegExp(","));
             std::cout << sp[1].toStdString() << std::endl;
-            //QString msgHeaderURL = "http://www.localoptimum.com/warp2/inbox/"
+            //QString msgHeaderURL = "http://www.someServer/warp2/inbox/"
 
             newMsgHashes << sp[1];
         }
