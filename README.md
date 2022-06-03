@@ -11,5 +11,4 @@ So, what if you could send a message to someone, where the metadata was encrypte
 
 warp2 works by encryping the header (to, from, date) as a separate piece of data to the message.  It just uses regular public key encryption, so you need to swap keys with your friends to communicate as usual.  The header also contains identifying information to locate the message in the database.  There is one inbox shared with all users (obviously this does not scale too much).  The client attempts to decrypt this small header info of each message.  If the decryption works, then the message is for you, and the message body is found, downloaded, and decrypted.  If the decryption does not work, then the message is not for you and you can flag it as ignored.  Of course, to improve privacy the client can occasionally grab random messages and just dump them to /dev/null, but the code doesn't do that yet.
 
-We wrote this as a paper preprint (https://arxiv.org/abs/1411.6409) and this code is the proof of concept work to go with that paper.  I hope someone finds it useful :)
-
+We wrote this as a paper preprint (https://arxiv.org/abs/1411.6409) and this code is the proof of concept work to go with that paper.  It's BSD license, so if someone finds this useful then just help yourself :)
